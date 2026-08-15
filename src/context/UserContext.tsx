@@ -25,21 +25,26 @@ export const useUser = () => {
 };
 
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Mock logged-in user for the dashboard
-  const [user, setUser] = useState<User | null>({
-    id: '1',
-    name: 'Admin User',
-    email: 'admin@techflix.com',
-    role: 'admin',
-    avatar: 'https://ui-avatars.com/api/?name=Admin+User&background=e50914&color=fff',
+  const [user, setUser] = useState<User | null>(() => {
+    const saved = localStorage.getItem('techflix_admin_user');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
   });
 
   const login = (userData: User) => {
     setUser(userData);
+    localStorage.setItem('techflix_admin_user', JSON.stringify(userData));
   };
 
   const logout = () => {
     setUser(null);
+    localStorage.removeItem('techflix_admin_user');
   };
 
   return (

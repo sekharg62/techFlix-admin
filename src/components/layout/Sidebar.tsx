@@ -37,15 +37,15 @@ interface SidebarProps {
 }
 
 const menuItems = [
-  { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
-  { text: 'Products', icon: <InventoryIcon />, path: '/products' },
-  { text: 'Categories', icon: <CategoryIcon />, path: '/categories' },
-  { text: 'Orders', icon: <ShoppingCartIcon />, path: '/orders' },
-  { text: 'Customers', icon: <PeopleIcon />, path: '/customers' },
-  { text: 'Reviews', icon: <RateReviewIcon />, path: '/reviews' },
-  { text: 'Hero Slides', icon: <ViewCarouselIcon />, path: '/hero-slides' },
-  { text: 'Home Section', icon: <WebIcon />, path: '/home-section' },
-  { text: 'Settings', icon: <SettingsIcon />, path: '/settings' },
+  { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
+  { text: 'Products', icon: <InventoryIcon />, path: '/dashboard/products' },
+  { text: 'Categories', icon: <CategoryIcon />, path: '/dashboard/categories' },
+  { text: 'Orders', icon: <ShoppingCartIcon />, path: '/dashboard/orders' },
+  { text: 'Customers', icon: <PeopleIcon />, path: '/dashboard/customers' },
+  { text: 'Reviews', icon: <RateReviewIcon />, path: '/dashboard/reviews' },
+  { text: 'Hero Slides', icon: <ViewCarouselIcon />, path: '/dashboard/hero-slides' },
+  { text: 'Home Section', icon: <WebIcon />, path: '/dashboard/home-section' },
+  { text: 'Settings', icon: <SettingsIcon />, path: '/dashboard/settings' },
 ];
 
 export const Sidebar: React.FC<SidebarProps> = ({ open, toggleDrawer }) => {

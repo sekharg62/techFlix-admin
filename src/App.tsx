@@ -1,7 +1,7 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { CustomThemeProvider } from './context/ThemeContext';
-import { UserProvider } from './context/UserContext';
+import { UserProvider, useUser } from './context/UserContext';
 import { Toaster } from 'react-hot-toast';
 import { DashboardLayout } from './components/layout/DashboardLayout';
 import { DashboardHome } from './pages/DashboardHome';
@@ -10,6 +10,16 @@ import { Categories } from './pages/Categories';
 import { Reviews } from './pages/Reviews';
 import { HeroSlides } from './pages/HeroSlides';
 import { HomeSection } from './pages/HomeSection';
+import { Login } from './pages/Login';
+
+// Protected route wrapper component
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user } = useUser();
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  return <>{children}</>;
+};
 
 // Placeholder for other pages
 const PlaceholderPage = ({ title }: { title: string }) => (
@@ -49,7 +59,15 @@ function App() {
         />
         <Router>
           <Routes>
-            <Route path="/" element={<DashboardLayout />}>
+            <Route path="/login" element={<Login />} />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout />
+                </ProtectedRoute>
+              }
+            >
               <Route index element={<DashboardHome />} />
               <Route path="products" element={<Products />} />
               <Route path="categories" element={<Categories />} />
@@ -60,6 +78,7 @@ function App() {
               <Route path="home-section" element={<HomeSection />} />
               <Route path="settings" element={<PlaceholderPage title="Settings" />} />
             </Route>
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
         </Router>
       </CustomThemeProvider>
