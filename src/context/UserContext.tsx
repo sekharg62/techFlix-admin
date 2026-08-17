@@ -6,6 +6,7 @@ interface User {
   email: string;
   role: 'admin' | 'manager';
   avatar?: string;
+  token?: string;
 }
 
 interface UserContextType {

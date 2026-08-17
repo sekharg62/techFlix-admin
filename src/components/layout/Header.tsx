@@ -1,21 +1,21 @@
 import React from 'react';
-import { 
-  AppBar, 
-  Toolbar, 
-  IconButton, 
-  Typography, 
-  Box, 
-  Avatar, 
+import {
+  AppBar,
+  Toolbar,
+  IconButton,
+  Typography,
+  Box,
+  Avatar,
   Badge,
   useTheme as useMuiTheme
 } from '@mui/material';
-import { 
+import {
   Menu as MenuIcon,
   Notifications as NotificationsIcon,
   DarkMode as DarkModeIcon,
   LightMode as LightModeIcon
 } from '@mui/icons-material';
-import { toast } from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import { useThemeContext } from '../../context/ThemeContext';
 import { useUser } from '../../context/UserContext';
 
@@ -45,9 +45,9 @@ export const Header: React.FC<HeaderProps> = ({ open, toggleDrawer }) => {
   };
 
   return (
-    <AppBar 
-      position="fixed" 
-      sx={{ 
+    <AppBar
+      position="fixed"
+      sx={{
         zIndex: muiTheme.zIndex.drawer + 1,
         transition: muiTheme.transitions.create(['width', 'margin'], {
           easing: muiTheme.transitions.easing.sharp,
@@ -77,7 +77,7 @@ export const Header: React.FC<HeaderProps> = ({ open, toggleDrawer }) => {
         >
           <MenuIcon />
         </IconButton>
-        
+
         <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, fontWeight: 700 }}>
           TechFlix <span className="text-primary-main">Admin</span>
         </Typography>
@@ -86,13 +86,13 @@ export const Header: React.FC<HeaderProps> = ({ open, toggleDrawer }) => {
           <IconButton color="inherit" onClick={handleToggleTheme}>
             {mode === 'dark' ? <LightModeIcon /> : <DarkModeIcon />}
           </IconButton>
-          
+
           <IconButton color="inherit" onClick={handleNotificationsClick}>
             <Badge badgeContent={4} color="primary">
               <NotificationsIcon />
             </Badge>
           </IconButton>
-          
+
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 1 }}>
             <Box sx={{ display: { xs: 'none', sm: 'block' }, textAlign: 'right' }}>
               <Typography variant="body2" sx={{ fontWeight: 600 }}>

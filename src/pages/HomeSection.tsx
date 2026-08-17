@@ -26,7 +26,7 @@ import {
   Layers as LayersIcon,
   CheckCircle as CheckCircleIcon,
 } from '@mui/icons-material';
-import { toast } from 'react-hot-toast';
+import { toast } from 'react-toastify';
 
 interface SectionItem {
   id: string;
@@ -214,15 +214,14 @@ export const HomeSection: React.FC = () => {
               sx={{
                 borderRadius: '12px',
                 backgroundColor: isDarkMode ? '#1a1a22' : '#f8fafc',
-                border: `1px solid ${
-                  section.enabled
+                border: `1px solid ${section.enabled
                     ? isDarkMode
                       ? alpha(theme.palette.primary.main, 0.25)
                       : alpha(theme.palette.primary.main, 0.15)
                     : isDarkMode
-                    ? alpha('#ffffff', 0.06)
-                    : alpha('#000000', 0.06)
-                }`,
+                      ? alpha('#ffffff', 0.06)
+                      : alpha('#000000', 0.06)
+                  }`,
                 transition: 'all 0.2s ease',
                 '&:hover': {
                   borderColor: theme.palette.primary.main,

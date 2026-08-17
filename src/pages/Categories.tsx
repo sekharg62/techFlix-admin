@@ -30,7 +30,7 @@ import {
   Category as CategoryIcon,
   FolderSpecial as FolderIcon,
 } from '@mui/icons-material';
-import { toast } from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import { CustomDataTable } from '../components/common/CustomDataTable';
 import { mockCategories, type Category } from '../data/mockCategories';
 
@@ -136,13 +136,13 @@ export const Categories: React.FC = () => {
         prev.map((item) =>
           item.id === editingCategory.id
             ? {
-                ...item,
-                name: name.trim(),
-                slug: slug.trim(),
-                description: description.trim(),
-                imageUrl: imageUrl.trim(),
-                status,
-              }
+              ...item,
+              name: name.trim(),
+              slug: slug.trim(),
+              description: description.trim(),
+              imageUrl: imageUrl.trim(),
+              status,
+            }
             : item
         )
       );

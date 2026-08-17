@@ -30,7 +30,7 @@ import {
   Star as StarIcon,
   RateReview as RateReviewIcon,
 } from '@mui/icons-material';
-import { toast } from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import { CustomDataTable } from '../components/common/CustomDataTable';
 import { mockReviews, type Review } from '../data/mockReviews';
 
@@ -122,13 +122,13 @@ export const Reviews: React.FC = () => {
         prev.map((item) =>
           item.id === editingReview.id
             ? {
-                ...item,
-                name: name.trim(),
-                role: role.trim(),
-                starCount,
-                profileUrl: profileUrl.trim(),
-                comment: comment.trim(),
-              }
+              ...item,
+              name: name.trim(),
+              role: role.trim(),
+              starCount,
+              profileUrl: profileUrl.trim(),
+              comment: comment.trim(),
+            }
             : item
         )
       );

@@ -1,8 +1,10 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 import { CustomThemeProvider } from './context/ThemeContext';
 import { UserProvider, useUser } from './context/UserContext';
-import { Toaster } from 'react-hot-toast';
 import { DashboardLayout } from './components/layout/DashboardLayout';
 import { DashboardHome } from './pages/DashboardHome';
 import { Products } from './pages/Products';
@@ -12,12 +14,25 @@ import { HeroSlides } from './pages/HeroSlides';
 import { HomeSection } from './pages/HomeSection';
 import { Login } from './pages/Login';
 
-// Protected route wrapper component
+// Protected route wrapper component: checks if user exists and has a valid token
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user } = useUser();
-  if (!user) {
+  
+  if (!user || !user.token) {
     return <Navigate to="/login" replace />;
   }
+  
+  return <>{children}</>;
+};
+
+// Redirect route for public pages like /login if user is already authenticated
+const PublicRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user } = useUser();
+  
+  if (user && user.token) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  
   return <>{children}</>;
 };
 
@@ -30,36 +45,28 @@ function App() {
   return (
     <UserProvider>
       <CustomThemeProvider>
-        <Toaster
+        <ToastContainer
           position="top-right"
-          toastOptions={{
-            duration: 3500,
-            style: {
-              background: '#1f1f27',
-              color: '#ffffff',
-              borderRadius: '10px',
-              border: '1px solid rgba(255, 255, 255, 0.12)',
-              boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
-              fontSize: '0.875rem',
-              fontWeight: 500,
-            },
-            success: {
-              iconTheme: {
-                primary: '#4caf50',
-                secondary: '#ffffff',
-              },
-            },
-            error: {
-              iconTheme: {
-                primary: '#e50914',
-                secondary: '#ffffff',
-              },
-            },
-          }}
+          autoClose={3500}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="dark"
         />
         <Router>
           <Routes>
-            <Route path="/login" element={<Login />} />
+            <Route 
+              path="/login" 
+              element={
+                <PublicRoute>
+                  <Login />
+                </PublicRoute>
+              } 
+            />
             <Route
               path="/dashboard"
               element={

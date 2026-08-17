@@ -26,7 +26,7 @@ import {
   ViewCarousel as ViewCarouselIcon,
   Image as ImageIcon,
 } from '@mui/icons-material';
-import { toast } from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import { CustomDataTable } from '../components/common/CustomDataTable';
 import { mockHeroSlides, type HeroSlide } from '../data/mockHeroSlides';
 
@@ -108,10 +108,10 @@ export const HeroSlides: React.FC = () => {
         prev.map((item) =>
           item.id === editingSlide.id
             ? {
-                ...item,
-                order: Number(order),
-                imageUrl: imageUrl.trim(),
-              }
+              ...item,
+              order: Number(order),
+              imageUrl: imageUrl.trim(),
+            }
             : item
         )
       );

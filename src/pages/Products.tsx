@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { Box, Typography, Chip, Button } from '@mui/material';
 import type { GridColDef } from '@mui/x-data-grid';
 import { Add as AddIcon } from '@mui/icons-material';
-import { toast } from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import { CustomDataTable } from '../components/common/CustomDataTable';
 
 const mockProducts = [
