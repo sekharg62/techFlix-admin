@@ -44,7 +44,7 @@ const menuItems = [
   { text: 'Customers', icon: <PeopleIcon />, path: '/dashboard/customers' },
   { text: 'Reviews', icon: <RateReviewIcon />, path: '/dashboard/reviews' },
   { text: 'Hero Slides', icon: <ViewCarouselIcon />, path: '/dashboard/hero-slides' },
-  { text: 'Home Section', icon: <WebIcon />, path: '/dashboard/home-section' },
+  { text: 'Home Sections', icon: <WebIcon />, path: '/dashboard/home-sections' },
   { text: 'Settings', icon: <SettingsIcon />, path: '/dashboard/settings' },
 ];
 

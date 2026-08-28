@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -12,49 +12,76 @@ import {
   DialogContent,
   DialogActions,
   TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   useTheme,
   alpha,
   Alert,
+  CircularProgress,
+  Paper,
 } from '@mui/material';
 import type { GridColDef } from '@mui/x-data-grid';
 import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
-  CloudUpload as CloudUploadIcon,
   Close as CloseIcon,
   Category as CategoryIcon,
   FolderSpecial as FolderIcon,
+  Refresh as RefreshIcon,
+  ContentCopy as ContentCopyIcon,
+  Tag as TagIcon,
+  Layers as LayersIcon,
+  Schedule as ScheduleIcon,
 } from '@mui/icons-material';
 import { toast } from 'react-toastify';
+import dayjs from 'dayjs';
 import { CustomDataTable } from '../components/common/CustomDataTable';
-import { mockCategories, type Category } from '../data/mockCategories';
+import { categoryService } from '../services/categoryService';
+import type { Category } from '../types/category';
 
 export const Categories: React.FC = () => {
   const theme = useTheme();
   const isDarkMode = theme.palette.mode === 'dark';
 
-  const [categories, setCategories] = useState<Category[]>(mockCategories);
+  // Data states
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  // Modal State
   const [modalOpen, setModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [saving, setSaving] = useState(false);
 
   // Form State
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
-  const [description, setDescription] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
-  const [status, setStatus] = useState<'Active' | 'Inactive'>('Active');
+  const [desc, setDesc] = useState('');
   const [formError, setFormError] = useState('');
 
   // Delete State
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
-  // Auto-generate slug from name
+  // Fetch all categories from backend API
+  const fetchCategories = useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await categoryService.getAllCategories();
+      setCategories(Array.isArray(data) ? data : []);
+    } catch (error: any) {
+      console.error('Failed to fetch categories:', error);
+      const message = error?.response?.data?.message || 'Failed to load categories from server';
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
+
+  // Auto-generate slug from name during creation
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setName(val);
@@ -74,9 +101,7 @@ export const Categories: React.FC = () => {
     setEditingCategory(null);
     setName('');
     setSlug('');
-    setDescription('');
-    setImageUrl('');
-    setStatus('Active');
+    setDesc('');
     setFormError('');
     setModalOpen(true);
   };
@@ -84,85 +109,72 @@ export const Categories: React.FC = () => {
   // Open Modal for Edit
   const handleOpenEdit = (category: Category) => {
     setEditingCategory(category);
-    setName(category.name);
-    setSlug(category.slug);
-    setDescription(category.description);
-    setImageUrl(category.imageUrl || '');
-    setStatus(category.status);
+    setName(category.name || '');
+    setSlug(category.slug || '');
+    setDesc(category.desc || '');
     setFormError('');
     setModalOpen(true);
   };
 
   const handleCloseModal = () => {
+    if (saving) return;
     setModalOpen(false);
     setEditingCategory(null);
+    setFormError('');
   };
 
-  // Image Upload Handler
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        setFormError('Image size must be less than 5MB');
-        toast.error('Image size must be under 5MB');
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImageUrl(reader.result as string);
-        setFormError('');
-        toast.success('Category image selected!');
-      };
-      reader.readAsDataURL(file);
-    }
+  // Copy to clipboard helper
+  const handleCopyText = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    toast.info(`Copied ${label} to clipboard!`, { autoClose: 1500 });
   };
 
-  // Submit Handler
-  const handleSubmitForm = (e: React.FormEvent) => {
+  // Submit Handler for Create / Update
+  const handleSubmitForm = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
       setFormError('Category name is required.');
       toast.error('Category name is required.');
       return;
     }
-    if (!slug.trim()) {
-      setFormError('Category slug is required.');
-      toast.error('Category slug is required.');
-      return;
-    }
 
-    if (editingCategory) {
-      setCategories((prev) =>
-        prev.map((item) =>
-          item.id === editingCategory.id
-            ? {
-              ...item,
-              name: name.trim(),
-              slug: slug.trim(),
-              description: description.trim(),
-              imageUrl: imageUrl.trim(),
-              status,
-            }
-            : item
-        )
-      );
-      toast.success(`Category "${name}" updated successfully!`);
-    } else {
-      const newCategory: Category = {
-        id: `CAT-00${categories.length + 1}`,
-        name: name.trim(),
-        slug: slug.trim(),
-        description: description.trim(),
-        imageUrl: imageUrl.trim(),
-        productCount: 0,
-        status,
-        createdAt: new Date().toISOString().split('T')[0],
-      };
-      setCategories((prev) => [newCategory, ...prev]);
-      toast.success(`Category "${newCategory.name}" created successfully!`);
-    }
+    setSaving(true);
+    setFormError('');
 
-    handleCloseModal();
+    try {
+      if (editingCategory) {
+        // Update category (PUT /api/categories/:id)
+        const updated = await categoryService.updateCategory(editingCategory.id, {
+          name: name.trim(),
+          slug: slug.trim() || undefined,
+          desc: desc.trim() || undefined,
+        });
+
+        setCategories((prev) =>
+          prev.map((item) => (item.id === editingCategory.id ? updated : item))
+        );
+        toast.success(`Category "${updated.name}" updated successfully!`);
+      } else {
+        // Create category (POST /api/categories)
+        const created = await categoryService.createCategory({
+          name: name.trim(),
+          slug: slug.trim() || undefined,
+          desc: desc.trim() || undefined,
+        });
+
+        setCategories((prev) => [created, ...prev]);
+        toast.success(`Category "${created.name}" created successfully!`);
+      }
+
+      handleCloseModal();
+    } catch (error: any) {
+      console.error('Error saving category:', error);
+      const message = error?.response?.data?.message || 'Failed to save category';
+      setFormError(message);
+      toast.error(message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   // Delete Handlers
@@ -171,43 +183,78 @@ export const Categories: React.FC = () => {
     setDeleteDialogOpen(true);
   };
 
-  const handleConfirmDelete = () => {
-    if (categoryToDelete) {
+  const handleConfirmDelete = async () => {
+    if (!categoryToDelete) return;
+    setDeleting(true);
+
+    try {
+      await categoryService.deleteCategory(categoryToDelete.id);
       setCategories((prev) => prev.filter((item) => item.id !== categoryToDelete.id));
-      toast.error(`Category "${categoryToDelete.name}" deleted!`, { icon: '🗑️' });
+      toast.success(`Category "${categoryToDelete.name}" deleted successfully!`, { icon: '🗑️' });
+      setDeleteDialogOpen(false);
+      setCategoryToDelete(null);
+    } catch (error: any) {
+      console.error('Error deleting category:', error);
+      const message = error?.response?.data?.message || 'Failed to delete category';
+      toast.error(message);
+    } finally {
+      setDeleting(false);
     }
-    setDeleteDialogOpen(false);
-    setCategoryToDelete(null);
   };
 
-  // Columns Definition
+  // Table Columns Definition
   const columns = useMemo<GridColDef[]>(
     () => [
       {
         field: 'id',
         headerName: 'Category ID',
-        width: 120,
-        renderCell: (params) => (
-          <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
-            <Typography variant="body2" fontWeight={700} sx={{ fontFamily: 'monospace', color: 'primary.main' }}>
-              {params.value}
-            </Typography>
-          </Box>
-        ),
+        width: 150,
+        renderCell: (params) => {
+          const val = params.value as string;
+          return (
+            <Tooltip title={`Full ID: ${val} (Click to copy)`} arrow>
+              <Box
+                onClick={() => handleCopyText(val, 'ID')}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.5,
+                  cursor: 'pointer',
+                  height: '100%',
+                  '&:hover': {
+                    color: 'primary.main',
+                  },
+                }}
+              >
+                <Typography
+                  variant="body2"
+                  fontWeight={700}
+                  sx={{
+                    fontFamily: 'monospace',
+                    color: 'primary.main',
+                    fontSize: '0.75rem',
+                    letterSpacing: '0.02em',
+                  }}
+                >
+                  {val ? `${val.substring(0, 8)}...` : '—'}
+                </Typography>
+                <ContentCopyIcon sx={{ fontSize: 13, opacity: 0.5 }} />
+              </Box>
+            </Tooltip>
+          );
+        },
       },
       {
         field: 'name',
         headerName: 'Category Name',
-        flex: 1,
-        minWidth: 200,
+        flex: 1.2,
+        minWidth: 220,
         renderCell: (params) => (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, height: '100%' }}>
             <Avatar
-              src={params.row.imageUrl}
-              alt={params.value}
               sx={{
-                width: 38,
-                height: 38,
+                width: 36,
+                height: 36,
                 bgcolor: alpha(theme.palette.primary.main, 0.15),
                 color: theme.palette.primary.main,
                 fontWeight: 700,
@@ -228,78 +275,79 @@ export const Categories: React.FC = () => {
       {
         field: 'slug',
         headerName: 'Slug',
-        width: 160,
-        renderCell: (params) => (
-          <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
-            <Chip
-              label={`/${params.value}`}
-              size="small"
-              variant="outlined"
-              sx={{
-                fontFamily: 'monospace',
-                fontSize: '0.75rem',
-                fontWeight: 600,
-                borderRadius: '6px',
-                borderColor: isDarkMode ? alpha('#ffffff', 0.2) : alpha('#000000', 0.15),
-              }}
-            />
-          </Box>
-        ),
+        width: 190,
+        renderCell: (params) => {
+          const val = params.value as string;
+          return (
+            <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+              <Tooltip title="Click to copy slug" arrow>
+                <Chip
+                  icon={<TagIcon sx={{ fontSize: '13px !important' }} />}
+                  label={val || '—'}
+                  size="small"
+                  onClick={() => handleCopyText(val, 'Slug')}
+                  sx={{
+                    fontFamily: 'monospace',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    backgroundColor: isDarkMode ? alpha('#ffffff', 0.06) : alpha('#000000', 0.05),
+                    borderColor: isDarkMode ? alpha('#ffffff', 0.15) : alpha('#000000', 0.15),
+                    '&:hover': {
+                      backgroundColor: alpha(theme.palette.primary.main, 0.15),
+                      borderColor: theme.palette.primary.main,
+                    },
+                  }}
+                />
+              </Tooltip>
+            </Box>
+          );
+        },
       },
       {
-        field: 'description',
+        field: 'desc',
         headerName: 'Description',
-        flex: 1.5,
-        minWidth: 250,
-        renderCell: (params) => (
-          <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              noWrap
-              sx={{ display: 'block' }}
-            >
-              {params.value || 'No description provided.'}
-            </Typography>
-          </Box>
-        ),
+        flex: 1.8,
+        minWidth: 260,
+        renderCell: (params) => {
+          const descriptionText = params.value as string | undefined | null;
+          return (
+            <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+              {descriptionText ? (
+                <Tooltip title={descriptionText} arrow placement="top-start">
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    noWrap
+                    sx={{ display: 'block', maxWidth: '100%' }}
+                  >
+                    {descriptionText}
+                  </Typography>
+                </Tooltip>
+              ) : (
+                <Typography variant="caption" sx={{ color: 'text.disabled', fontStyle: 'italic' }}>
+                  No description
+                </Typography>
+              )}
+            </Box>
+          );
+        },
       },
       {
-        field: 'productCount',
-        headerName: 'Products',
-        width: 130,
-        type: 'number',
-        align: 'left',
-        headerAlign: 'left',
-        renderCell: (params) => (
-          <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
-            <Chip
-              label={`${params.value} Items`}
-              size="small"
-              sx={{
-                fontWeight: 700,
-                fontSize: '0.75rem',
-                backgroundColor: isDarkMode ? alpha('#ffffff', 0.08) : alpha('#000000', 0.06),
-                borderRadius: '6px',
-              }}
-            />
-          </Box>
-        ),
-      },
-      {
-        field: 'status',
-        headerName: 'Status',
-        width: 120,
-        renderCell: (params) => (
-          <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
-            <Chip
-              label={params.value}
-              color={params.value === 'Active' ? 'success' : 'default'}
-              size="small"
-              sx={{ fontWeight: 700, borderRadius: '6px' }}
-            />
-          </Box>
-        ),
+        field: 'createdAt',
+        headerName: 'Created At',
+        width: 170,
+        renderCell: (params) => {
+          const date = params.value ? dayjs(params.value).format('MMM D, YYYY · HH:mm') : '—';
+          return (
+            <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+              <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
+                {date}
+              </Typography>
+            </Box>
+          );
+        },
       },
       {
         field: 'actions',
@@ -356,43 +404,171 @@ export const Categories: React.FC = () => {
       {/* Top Header */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <CategoryIcon sx={{ fontSize: 36, color: 'primary.main' }} />
+          <CategoryIcon sx={{ fontSize: 38, color: 'primary.main' }} />
           <Box>
             <Typography variant="h4" fontWeight="700" sx={{ letterSpacing: '-0.02em' }}>
               Categories
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Organize your catalog by creating, editing, and managing product categories.
+              Manage product taxonomies, hierarchy, and URL slugs for your catalog.
             </Typography>
           </Box>
         </Box>
 
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<AddIcon />}
-          onClick={handleOpenCreate}
+        <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
+          <Tooltip title="Refresh categories">
+            <IconButton
+              onClick={fetchCategories}
+              disabled={loading}
+              sx={{
+                borderRadius: '12px',
+                border: `1px solid ${isDarkMode ? alpha('#ffffff', 0.15) : alpha('#000000', 0.15)}`,
+                p: 1.2,
+                backgroundColor: isDarkMode ? alpha('#ffffff', 0.03) : alpha('#000000', 0.02),
+              }}
+            >
+              <RefreshIcon sx={{ animation: loading ? 'spin 1s linear infinite' : 'none' }} />
+            </IconButton>
+          </Tooltip>
+
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<AddIcon />}
+            onClick={handleOpenCreate}
+            sx={{
+              fontWeight: 700,
+              px: 3,
+              py: 1.2,
+              borderRadius: '12px',
+              boxShadow: `0 8px 20px ${alpha(theme.palette.primary.main, 0.35)}`,
+              '&:hover': {
+                boxShadow: `0 10px 24px ${alpha(theme.palette.primary.main, 0.5)}`,
+              },
+            }}
+          >
+            Create Category
+          </Button>
+        </Box>
+      </Box>
+
+      {/* Summary KPI Cards */}
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' },
+          gap: 2,
+        }}
+      >
+        <Paper
+          elevation={0}
           sx={{
-            fontWeight: 700,
-            px: 3,
-            py: 1.2,
-            borderRadius: '12px',
-            boxShadow: `0 8px 20px ${alpha(theme.palette.primary.main, 0.35)}`,
-            '&:hover': {
-              boxShadow: `0 10px 24px ${alpha(theme.palette.primary.main, 0.5)}`,
-            },
+            p: 2.5,
+            borderRadius: '16px',
+            backgroundColor: isDarkMode ? '#131318' : '#ffffff',
+            border: `1px solid ${isDarkMode ? alpha('#ffffff', 0.08) : alpha('#000000', 0.08)}`,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2,
           }}
         >
-          Create Category
-        </Button>
+          <Avatar
+            sx={{
+              bgcolor: alpha(theme.palette.primary.main, 0.12),
+              color: theme.palette.primary.main,
+              width: 48,
+              height: 48,
+              borderRadius: '12px',
+            }}
+          >
+            <LayersIcon />
+          </Avatar>
+          <Box>
+            <Typography variant="caption" color="text.secondary" fontWeight={600} textTransform="uppercase">
+              Total Categories
+            </Typography>
+            <Typography variant="h5" fontWeight={700}>
+              {categories.length}
+            </Typography>
+          </Box>
+        </Paper>
+
+        <Paper
+          elevation={0}
+          sx={{
+            p: 2.5,
+            borderRadius: '16px',
+            backgroundColor: isDarkMode ? '#131318' : '#ffffff',
+            border: `1px solid ${isDarkMode ? alpha('#ffffff', 0.08) : alpha('#000000', 0.08)}`,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2,
+          }}
+        >
+          <Avatar
+            sx={{
+              bgcolor: alpha(theme.palette.success?.main || '#2e7d32', 0.12),
+              color: theme.palette.success?.main || '#2e7d32',
+              width: 48,
+              height: 48,
+              borderRadius: '12px',
+            }}
+          >
+            <TagIcon />
+          </Avatar>
+          <Box>
+            <Typography variant="caption" color="text.secondary" fontWeight={600} textTransform="uppercase">
+              Active Slugs
+            </Typography>
+            <Typography variant="h5" fontWeight={700}>
+              {categories.filter((c) => !!c.slug).length}
+            </Typography>
+          </Box>
+        </Paper>
+
+        <Paper
+          elevation={0}
+          sx={{
+            p: 2.5,
+            borderRadius: '16px',
+            backgroundColor: isDarkMode ? '#131318' : '#ffffff',
+            border: `1px solid ${isDarkMode ? alpha('#ffffff', 0.08) : alpha('#000000', 0.08)}`,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2,
+          }}
+        >
+          <Avatar
+            sx={{
+              bgcolor: alpha(theme.palette.info?.main || '#0288d1', 0.12),
+              color: theme.palette.info?.main || '#0288d1',
+              width: 48,
+              height: 48,
+              borderRadius: '12px',
+            }}
+          >
+            <ScheduleIcon />
+          </Avatar>
+          <Box>
+            <Typography variant="caption" color="text.secondary" fontWeight={600} textTransform="uppercase">
+              Latest Added
+            </Typography>
+            <Typography variant="body1" fontWeight={700} noWrap sx={{ maxWidth: 180 }}>
+              {categories.length > 0 ? categories[0].name : 'None'}
+            </Typography>
+          </Box>
+        </Paper>
       </Box>
 
       {/* Main Data Table */}
       <CustomDataTable
         rows={categories}
         columns={columns}
-        title="Product Categories"
+        loading={loading}
+        title="Catalog Categories"
+        subtitle="Live catalog records synced from /api/categories"
         searchPlaceholder="Search categories by name, slug, or description..."
+        onRefresh={fetchCategories}
       />
 
       {/* Create / Edit Category Modal */}
@@ -418,24 +594,22 @@ export const Categories: React.FC = () => {
             px: 3,
             display: 'flex',
             alignItems: 'center',
-            justify: 'space-between',
-            width: '100%',
-            color: 'text.primary',
+            justifyContent: 'space-between',
             borderBottom: `1px solid ${isDarkMode ? alpha('#ffffff', 0.08) : alpha('#000000', 0.08)}`,
           }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <CategoryIcon sx={{ color: 'primary.main' }} />
             <Typography variant="h6" fontWeight={700} color="text.primary">
-              {editingCategory ? 'Edit Category' : 'Create Category'}
+              {editingCategory ? 'Edit Category' : 'Create New Category'}
             </Typography>
           </Box>
           <IconButton
             size="small"
             onClick={handleCloseModal}
+            disabled={saving}
             sx={{
               color: 'text.secondary',
-              ml: 'auto',
               '&:hover': {
                 color: 'text.primary',
                 backgroundColor: isDarkMode ? alpha('#ffffff', 0.1) : alpha('#000000', 0.08),
@@ -454,111 +628,44 @@ export const Categories: React.FC = () => {
               </Alert>
             )}
 
-            {/* Category Image Picker */}
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 2.5,
-                p: 2,
-                borderRadius: '14px',
-                backgroundColor: isDarkMode ? alpha('#ffffff', 0.03) : alpha('#000000', 0.02),
-                border: `1px dashed ${isDarkMode ? alpha('#ffffff', 0.15) : alpha('#000000', 0.15)}`,
-              }}
-            >
-              <Avatar
-                src={imageUrl}
-                alt={name || 'Category'}
-                sx={{
-                  width: 60,
-                  height: 60,
-                  bgcolor: alpha(theme.palette.primary.main, 0.2),
-                  color: theme.palette.primary.main,
-                  borderRadius: '12px',
-                  border: `2px solid ${theme.palette.primary.main}`,
-                }}
-              >
-                <FolderIcon fontSize="large" />
-              </Avatar>
-
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                <Typography variant="subtitle2" fontWeight={600}>
-                  Category Thumbnail (Optional)
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                  <Button
-                    component="label"
-                    variant="outlined"
-                    size="small"
-                    startIcon={<CloudUploadIcon />}
-                    sx={{ borderRadius: '8px', textTransform: 'none', fontWeight: 600 }}
-                  >
-                    Upload Image
-                    <input type="file" hidden accept="image/*" onChange={handleImageUpload} />
-                  </Button>
-
-                  {imageUrl && (
-                    <Button
-                      variant="text"
-                      color="error"
-                      size="small"
-                      onClick={() => setImageUrl('')}
-                      sx={{ borderRadius: '8px', textTransform: 'none' }}
-                    >
-                      Remove
-                    </Button>
-                  )}
-                </Box>
-              </Box>
-            </Box>
-
             {/* Category Name */}
             <TextField
               label="Category Name *"
-              placeholder="e.g. Gaming Consoles"
+              placeholder="e.g. Web Development"
               value={name}
               onChange={handleNameChange}
               fullWidth
               required
+              disabled={saving}
               variant="outlined"
+              autoFocus
             />
 
             {/* Slug */}
             <TextField
-              label="URL Slug *"
-              placeholder="e.g. gaming-consoles"
+              label="URL Slug"
+              placeholder="e.g. web-development (auto-generated if empty)"
               value={slug}
               onChange={(e) => setSlug(e.target.value)}
               fullWidth
-              required
+              disabled={saving}
               variant="outlined"
-              helperText="URL friendly identifier used in site navigation"
+              helperText="Optional identifier for URL routing. Leave blank to auto-generate from name."
             />
 
-            {/* Description */}
+            {/* Description (desc) */}
             <TextField
-              label="Description"
-              placeholder="Brief summary of items in this category..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              label="Description (desc)"
+              placeholder="Courses and tutorials about web technologies..."
+              value={desc}
+              onChange={(e) => setDesc(e.target.value)}
               fullWidth
               multiline
               rows={3}
+              disabled={saving}
               variant="outlined"
+              helperText="Optional summary explaining this category."
             />
-
-            {/* Status */}
-            <FormControl fullWidth variant="outlined">
-              <InputLabel>Status</InputLabel>
-              <Select
-                value={status}
-                label="Status"
-                onChange={(e) => setStatus(e.target.value as 'Active' | 'Inactive')}
-              >
-                <MenuItem value="Active">Active</MenuItem>
-                <MenuItem value="Inactive">Inactive</MenuItem>
-              </Select>
-            </FormControl>
           </DialogContent>
 
           <DialogActions
@@ -568,16 +675,24 @@ export const Categories: React.FC = () => {
               borderTop: `1px solid ${isDarkMode ? alpha('#ffffff', 0.08) : alpha('#000000', 0.08)}`,
             }}
           >
-            <Button onClick={handleCloseModal} variant="outlined" color="inherit" sx={{ borderRadius: '10px' }}>
+            <Button
+              onClick={handleCloseModal}
+              variant="outlined"
+              color="inherit"
+              disabled={saving}
+              sx={{ borderRadius: '10px' }}
+            >
               Cancel
             </Button>
             <Button
               type="submit"
               variant="contained"
               color="primary"
+              disabled={saving}
+              startIcon={saving ? <CircularProgress size={18} color="inherit" /> : undefined}
               sx={{ borderRadius: '10px', px: 3, fontWeight: 700 }}
             >
-              {editingCategory ? 'Save Changes' : 'Create Category'}
+              {saving ? 'Saving...' : editingCategory ? 'Save Changes' : 'Create Category'}
             </Button>
           </DialogActions>
         </form>
@@ -586,7 +701,7 @@ export const Categories: React.FC = () => {
       {/* Delete Confirmation Dialog */}
       <Dialog
         open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
+        onClose={() => !deleting && setDeleteDialogOpen(false)}
         PaperProps={{
           sx: {
             borderRadius: '16px',
@@ -595,22 +710,34 @@ export const Categories: React.FC = () => {
           },
         }}
       >
-        <DialogTitle fontWeight={700} sx={{ color: 'text.primary' }}>Delete Category?</DialogTitle>
+        <DialogTitle fontWeight={700} sx={{ color: 'text.primary' }}>
+          Delete Category?
+        </DialogTitle>
         <DialogContent>
           <Typography variant="body2" color="text.secondary">
             Are you sure you want to delete category <strong>{categoryToDelete?.name}</strong> (
-            {categoryToDelete?.id})? Products in this category may need re-assigning.
+            <span style={{ fontFamily: 'monospace' }}>{categoryToDelete?.slug}</span>)?
+            This action cannot be undone.
           </Typography>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={() => setDeleteDialogOpen(false)} color="inherit">
+          <Button onClick={() => setDeleteDialogOpen(false)} color="inherit" disabled={deleting}>
             Cancel
           </Button>
-          <Button onClick={handleConfirmDelete} variant="contained" color="error" sx={{ fontWeight: 700 }}>
-            Delete
+          <Button
+            onClick={handleConfirmDelete}
+            variant="contained"
+            color="error"
+            disabled={deleting}
+            startIcon={deleting ? <CircularProgress size={18} color="inherit" /> : undefined}
+            sx={{ fontWeight: 700 }}
+          >
+            {deleting ? 'Deleting...' : 'Delete'}
           </Button>
         </DialogActions>
       </Dialog>
     </Box>
   );
 };
+
+export default Categories;

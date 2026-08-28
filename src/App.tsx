@@ -82,6 +82,7 @@ function App() {
               <Route path="customers" element={<PlaceholderPage title="Customers" />} />
               <Route path="reviews" element={<Reviews />} />
               <Route path="hero-slides" element={<HeroSlides />} />
+              <Route path="home-sections" element={<HomeSection />} />
               <Route path="home-section" element={<HomeSection />} />
               <Route path="settings" element={<PlaceholderPage title="Settings" />} />
             </Route>

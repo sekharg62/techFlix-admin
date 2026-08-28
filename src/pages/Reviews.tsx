@@ -1,11 +1,10 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Box,
   Typography,
   Button,
   Chip,
   Avatar,
-  Rating,
   IconButton,
   Tooltip,
   Dialog,
@@ -15,10 +14,10 @@ import {
   TextField,
   useTheme,
   alpha,
-  Paper,
-  Stack,
   Alert,
-  Snackbar,
+  CircularProgress,
+  LinearProgress,
+  Rating,
 } from '@mui/material';
 import type { GridColDef } from '@mui/x-data-grid';
 import {
@@ -27,32 +26,64 @@ import {
   Delete as DeleteIcon,
   CloudUpload as CloudUploadIcon,
   Close as CloseIcon,
-  Star as StarIcon,
   RateReview as RateReviewIcon,
+  Refresh as RefreshIcon,
+  Image as ImageIcon,
+  Star as StarIcon,
 } from '@mui/icons-material';
 import { toast } from 'react-toastify';
 import { CustomDataTable } from '../components/common/CustomDataTable';
-import { mockReviews, type Review } from '../data/mockReviews';
+import { reviewService } from '../services/reviewService';
+import { imgUploadService } from '../services/imgUploadService';
+import type { Review } from '../types/review';
 
 export const Reviews: React.FC = () => {
   const theme = useTheme();
   const isDarkMode = theme.palette.mode === 'dark';
 
-  const [reviews, setReviews] = useState<Review[]>(mockReviews);
+  // Data states
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Modal State
   const [modalOpen, setModalOpen] = useState(false);
   const [editingReview, setEditingReview] = useState<Review | null>(null);
+  const [saving, setSaving] = useState(false);
 
   // Form State
   const [name, setName] = useState('');
   const [role, setRole] = useState('');
   const [starCount, setStarCount] = useState<number>(5);
+  const [description, setDescription] = useState('');
   const [profileUrl, setProfileUrl] = useState('');
-  const [comment, setComment] = useState('');
   const [formError, setFormError] = useState('');
+
+  // Image Upload State
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
 
   // Delete Confirmation State
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [reviewToDelete, setReviewToDelete] = useState<Review | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  // Fetch all reviews from backend
+  const fetchReviews = useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await reviewService.getAllReviews();
+      setReviews(Array.isArray(data) ? data : []);
+    } catch (error: any) {
+      console.error('Failed to fetch reviews:', error);
+      toast.error(error?.response?.data?.message || 'Failed to load reviews from server');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchReviews();
+  }, [fetchReviews]);
 
   // Open Modal for Creating
   const handleOpenCreate = () => {
@@ -60,95 +91,128 @@ export const Reviews: React.FC = () => {
     setName('');
     setRole('');
     setStarCount(5);
+    setDescription('');
     setProfileUrl('');
-    setComment('');
     setFormError('');
+    setUploadProgress(0);
     setModalOpen(true);
   };
 
   // Open Modal for Editing
   const handleOpenEdit = (review: Review) => {
     setEditingReview(review);
-    setName(review.name);
-    setRole(review.role);
-    setStarCount(review.starCount);
+    setName(review.name || '');
+    setRole(review.role || '');
+    setStarCount(typeof review.starCount === 'number' ? review.starCount : 5);
+    setDescription(review.description || '');
     setProfileUrl(review.profileUrl || '');
-    setComment(review.comment);
     setFormError('');
+    setUploadProgress(0);
     setModalOpen(true);
   };
 
   const handleCloseModal = () => {
+    if (saving || uploadingImage) return;
     setModalOpen(false);
     setEditingReview(null);
+    setFormError('');
   };
 
-  // File Upload Handler for Profile Image
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Cloudinary Image Upload via imgUploadService
+  const handleImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        setFormError('Image size should be less than 5MB');
-        toast.error('Image size must be under 5MB');
-        return;
+    if (!file) return;
+
+    // Reset input value so same file can be selected again if needed
+    e.target.value = '';
+
+    setUploadingImage(true);
+    setUploadProgress(0);
+    setFormError('');
+
+    try {
+      const response = await imgUploadService.uploadImage(file, {
+        folder: 'techflix/reviews',
+        onUploadProgress: (progress) => {
+          if (progress.total) {
+            const percent = Math.round((progress.loaded * 100) / progress.total);
+            setUploadProgress(percent);
+          }
+        },
+      });
+
+      if (response.success && response.url) {
+        setProfileUrl(response.url);
+        toast.success('Profile image uploaded successfully!');
+      } else {
+        const errorMsg = response.message || 'Image upload failed';
+        setFormError(errorMsg);
+        toast.error(errorMsg);
       }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setProfileUrl(reader.result as string);
-        setFormError('');
-        toast.success('Profile picture selected!');
-      };
-      reader.readAsDataURL(file);
+    } catch (error: any) {
+      const errorMsg = error?.message || 'Failed to upload image';
+      setFormError(errorMsg);
+      toast.error(errorMsg);
+    } finally {
+      setUploadingImage(false);
     }
   };
 
   // Submit Handler for Create / Edit
-  const handleSubmitForm = (e: React.FormEvent) => {
+  const handleSubmitForm = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
       setFormError('Please enter a reviewer name.');
       toast.error('Please enter a reviewer name.');
       return;
     }
-    if (!role.trim()) {
-      setFormError('Please enter a role (e.g. VIP Subscriber, Verified Buyer).');
-      toast.error('Please enter a role.');
+    if (!description.trim()) {
+      setFormError('Please enter a review description.');
+      toast.error('Please enter a review description.');
       return;
     }
 
-    if (editingReview) {
-      // Edit existing review
-      setReviews((prev) =>
-        prev.map((item) =>
-          item.id === editingReview.id
-            ? {
-              ...item,
-              name: name.trim(),
-              role: role.trim(),
-              starCount,
-              profileUrl: profileUrl.trim(),
-              comment: comment.trim(),
-            }
-            : item
-        )
-      );
-      toast.success(`Review ${editingReview.id} updated successfully!`);
-    } else {
-      // Create new review
-      const newReview: Review = {
-        id: `REV-00${reviews.length + 1}`,
-        name: name.trim(),
-        role: role.trim(),
-        starCount,
-        profileUrl: profileUrl.trim(),
-        comment: comment.trim(),
-        createdAt: new Date().toISOString().split('T')[0],
-      };
-      setReviews((prev) => [newReview, ...prev]);
-      toast.success(`New review (${newReview.id}) created successfully!`);
-    }
+    setSaving(true);
+    setFormError('');
 
-    handleCloseModal();
+    try {
+      if (editingReview) {
+        // Update Review
+        const updated = await reviewService.updateReview(editingReview.id, {
+          name: name.trim(),
+          role: role.trim() || null,
+          starCount: Number(starCount),
+          description: description.trim(),
+          profileUrl: profileUrl.trim() || null,
+        });
+
+        setReviews((prev) =>
+          prev.map((item) => (item.id === editingReview.id ? updated : item))
+        );
+        toast.success('Review updated successfully!');
+      } else {
+        // Create Review
+        const created = await reviewService.createReview({
+          name: name.trim(),
+          role: role.trim() || null,
+          starCount: Number(starCount),
+          description: description.trim(),
+          profileUrl: profileUrl.trim() || null,
+        });
+
+        setReviews((prev) => [created, ...prev]);
+        toast.success('New review created successfully!');
+      }
+
+      handleCloseModal();
+    } catch (error: any) {
+      console.error('Error saving review:', error);
+      const message = error?.response?.data?.message || 'Failed to save review';
+      setFormError(message);
+      toast.error(message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   // Open Delete Confirmation
@@ -158,15 +222,37 @@ export const Reviews: React.FC = () => {
   };
 
   // Confirm Delete
-  const handleConfirmDelete = () => {
-    if (reviewToDelete) {
+  const handleConfirmDelete = async () => {
+    if (!reviewToDelete) return;
+    setDeleting(true);
+
+    try {
+      await reviewService.deleteReview(reviewToDelete.id);
       setReviews((prev) => prev.filter((item) => item.id !== reviewToDelete.id));
-      toast.error(`Review ${reviewToDelete.id} deleted!`, {
-        icon: '🗑️',
-      });
+      toast.success(`Review by "${reviewToDelete.name}" deleted successfully!`);
+      setDeleteDialogOpen(false);
+      setReviewToDelete(null);
+    } catch (error: any) {
+      console.error('Error deleting review:', error);
+      const message = error?.response?.data?.message || 'Failed to delete review';
+      toast.error(message);
+    } finally {
+      setDeleting(false);
     }
-    setDeleteDialogOpen(false);
-    setReviewToDelete(null);
+  };
+
+  // Format Date Helper
+  const formatDate = (isoString?: string) => {
+    if (!isoString) return '—';
+    try {
+      return new Date(isoString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      });
+    } catch {
+      return isoString;
+    }
   };
 
   // Column Definitions
@@ -175,104 +261,152 @@ export const Reviews: React.FC = () => {
       {
         field: 'id',
         headerName: 'ID',
-        width: 110,
+        width: 130,
         renderCell: (params) => (
-          <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
-            <Typography variant="body2" fontWeight={700} sx={{ fontFamily: 'monospace', color: 'primary.main' }}>
-              {params.value}
-            </Typography>
-          </Box>
+          <Tooltip title={params.value || ''} arrow>
+            <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+              <Typography
+                variant="body2"
+                fontWeight={700}
+                sx={{
+                  fontFamily: 'monospace',
+                  color: 'primary.main',
+                  fontSize: '0.75rem',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  maxWidth: 110,
+                }}
+              >
+                {params.value ? `${params.value.slice(0, 8)}...` : '—'}
+              </Typography>
+            </Box>
+          </Tooltip>
         ),
       },
       {
         field: 'name',
-        headerName: 'Reviewer Name',
+        headerName: 'Reviewer',
         flex: 1,
-        minWidth: 220,
-        renderCell: (params) => (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, height: '100%' }}>
-            <Avatar
-              src={params.row.profileUrl}
-              alt={params.value}
-              sx={{
-                width: 36,
-                height: 36,
-                bgcolor: alpha(theme.palette.primary.main, 0.2),
-                color: theme.palette.primary.main,
-                fontWeight: 700,
-                fontSize: '0.875rem',
-                border: `1px solid ${alpha(theme.palette.primary.main, 0.3)}`,
-              }}
-            >
-              {params.value ? params.value.charAt(0).toUpperCase() : 'U'}
-            </Avatar>
-            <Typography variant="body2" fontWeight={600} color="text.primary">
-              {params.value}
-            </Typography>
-          </Box>
-        ),
+        minWidth: 200,
+        renderCell: (params) => {
+          const row = params.row as Review;
+          return (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, height: '100%' }}>
+              <Avatar
+                src={row.profileUrl || undefined}
+                alt={params.value || 'User'}
+                sx={{
+                  width: 38,
+                  height: 38,
+                  bgcolor: alpha(theme.palette.primary.main, 0.2),
+                  color: theme.palette.primary.main,
+                  fontWeight: 700,
+                  fontSize: '0.875rem',
+                  border: `1.5px solid ${alpha(theme.palette.primary.main, 0.35)}`,
+                }}
+              >
+                {params.value ? params.value.charAt(0).toUpperCase() : 'U'}
+              </Avatar>
+              <Box sx={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                <Typography variant="body2" fontWeight={600} color="text.primary" noWrap>
+                  {params.value || 'Anonymous'}
+                </Typography>
+                {row.role && (
+                  <Typography variant="caption" color="text.secondary" noWrap>
+                    {row.role}
+                  </Typography>
+                )}
+              </Box>
+            </Box>
+          );
+        },
       },
       {
         field: 'starCount',
-        headerName: 'Star Rating',
-        width: 170,
+        headerName: 'Rating',
+        width: 160,
         type: 'number',
         align: 'left',
         headerAlign: 'left',
-        renderCell: (params) => (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, height: '100%' }}>
-            <Rating
-              value={Number(params.value)}
-              precision={0.5}
-              readOnly
-              size="small"
-              emptyIcon={<StarIcon style={{ opacity: 0.35 }} fontSize="inherit" />}
-            />
-            <Typography variant="body2" fontWeight={700} color="text.secondary">
-              {params.value}
-            </Typography>
-          </Box>
-        ),
+        renderCell: (params) => {
+          const stars = typeof params.value === 'number' ? params.value : 5;
+          return (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8, height: '100%' }}>
+              <Rating
+                value={stars}
+                precision={0.5}
+                readOnly
+                size="small"
+                emptyIcon={<StarIcon style={{ opacity: 0.3 }} fontSize="inherit" />}
+              />
+              <Typography variant="caption" fontWeight={700} color="text.secondary">
+                {stars}
+              </Typography>
+            </Box>
+          );
+        },
       },
       {
         field: 'role',
-        headerName: 'Role',
-        width: 160,
+        headerName: 'Role / Badge',
+        width: 150,
         renderCell: (params) => (
           <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
-            <Chip
-              label={params.value}
-              size="small"
-              variant="outlined"
-              sx={{
-                fontWeight: 600,
-                borderRadius: '8px',
-                fontSize: '0.75rem',
-                borderColor: isDarkMode ? alpha('#ffffff', 0.2) : alpha('#000000', 0.15),
-                backgroundColor: isDarkMode ? alpha('#ffffff', 0.04) : alpha('#000000', 0.02),
-              }}
-            />
+            {params.value ? (
+              <Chip
+                label={params.value}
+                size="small"
+                variant="outlined"
+                sx={{
+                  fontWeight: 600,
+                  borderRadius: '8px',
+                  fontSize: '0.75rem',
+                  borderColor: isDarkMode ? alpha('#ffffff', 0.2) : alpha('#000000', 0.15),
+                  backgroundColor: isDarkMode ? alpha('#ffffff', 0.04) : alpha('#000000', 0.02),
+                }}
+              />
+            ) : (
+              <Typography variant="caption" color="text.disabled">
+                None
+              </Typography>
+            )}
           </Box>
         ),
       },
       {
-        field: 'comment',
-        headerName: 'Review Comment',
-        flex: 1.5,
+        field: 'description',
+        headerName: 'Review Description',
+        flex: 2,
         minWidth: 260,
         renderCell: (params) => (
+          <Tooltip title={params.value || ''} arrow placement="top-start">
+            <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  display: 'block',
+                  lineHeight: 1.4,
+                }}
+              >
+                {params.value || 'No description provided.'}
+              </Typography>
+            </Box>
+          </Tooltip>
+        ),
+      },
+      {
+        field: 'createdAt',
+        headerName: 'Created At',
+        width: 130,
+        renderCell: (params) => (
           <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={{
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-                display: 'block',
-              }}
-            >
-              {params.value || 'No detailed feedback.'}
+            <Typography variant="caption" color="text.secondary" fontWeight={500}>
+              {formatDate(params.value)}
             </Typography>
           </Box>
         ),
@@ -280,7 +414,7 @@ export const Reviews: React.FC = () => {
       {
         field: 'actions',
         headerName: 'Actions',
-        width: 120,
+        width: 110,
         sortable: false,
         filterable: false,
         align: 'center',
@@ -330,7 +464,7 @@ export const Reviews: React.FC = () => {
 
   return (
     <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 3 }}>
-      {/* Top Header */}
+      {/* Top Header Section */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <RateReviewIcon sx={{ fontSize: 36, color: 'primary.main' }} />
@@ -339,37 +473,56 @@ export const Reviews: React.FC = () => {
               Customer Reviews
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Manage product feedback, star ratings, and buyer testimonials.
+              Manage user testimonials, star ratings (0-5), roles, and Cloudinary avatars.
             </Typography>
           </Box>
         </Box>
 
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<AddIcon />}
-          onClick={handleOpenCreate}
-          sx={{
-            fontWeight: 700,
-            px: 3,
-            py: 1.2,
-            borderRadius: '12px',
-            boxShadow: `0 8px 20px ${alpha(theme.palette.primary.main, 0.35)}`,
-            '&:hover': {
-              boxShadow: `0 10px 24px ${alpha(theme.palette.primary.main, 0.5)}`,
-            },
-          }}
-        >
-          Create Review
-        </Button>
+        <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
+          <Tooltip title="Refresh reviews">
+            <IconButton
+              onClick={fetchReviews}
+              disabled={loading}
+              sx={{
+                borderRadius: '12px',
+                border: `1px solid ${isDarkMode ? alpha('#ffffff', 0.15) : alpha('#000000', 0.15)}`,
+                p: 1.2,
+              }}
+            >
+              <RefreshIcon sx={{ animation: loading ? 'spin 1s linear infinite' : 'none' }} />
+            </IconButton>
+          </Tooltip>
+
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<AddIcon />}
+            onClick={handleOpenCreate}
+            sx={{
+              fontWeight: 700,
+              px: 3,
+              py: 1.2,
+              borderRadius: '12px',
+              boxShadow: `0 8px 20px ${alpha(theme.palette.primary.main, 0.35)}`,
+              '&:hover': {
+                boxShadow: `0 10px 24px ${alpha(theme.palette.primary.main, 0.5)}`,
+              },
+            }}
+          >
+            Create Review
+          </Button>
+        </Box>
       </Box>
 
       {/* Main Data Table */}
       <CustomDataTable
         rows={reviews}
         columns={columns}
-        title="All Testimonials"
-        searchPlaceholder="Search reviews by name, role, rating or text..."
+        loading={loading}
+        title="All Reviews"
+        subtitle="Manage customer testimonials and star ratings"
+        searchPlaceholder="Search reviews by name, role, description..."
+        onRefresh={fetchReviews}
       />
 
       {/* Create / Edit Review Dialog Modal */}
@@ -395,14 +548,12 @@ export const Reviews: React.FC = () => {
             px: 3,
             display: 'flex',
             alignItems: 'center',
-            justify: 'space-between',
-            width: '100%',
-            color: 'text.primary',
+            justifyContent: 'space-between',
             borderBottom: `1px solid ${isDarkMode ? alpha('#ffffff', 0.08) : alpha('#000000', 0.08)}`,
           }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <StarIcon sx={{ color: 'primary.main' }} />
+            <RateReviewIcon sx={{ color: 'primary.main' }} />
             <Typography variant="h6" fontWeight={700} color="text.primary">
               {editingReview ? 'Edit Review' : 'Create New Review'}
             </Typography>
@@ -410,9 +561,9 @@ export const Reviews: React.FC = () => {
           <IconButton
             size="small"
             onClick={handleCloseModal}
+            disabled={saving || uploadingImage}
             sx={{
               color: 'text.secondary',
-              ml: 'auto',
               '&:hover': {
                 color: 'text.primary',
                 backgroundColor: isDarkMode ? alpha('#ffffff', 0.1) : alpha('#000000', 0.08),
@@ -431,7 +582,7 @@ export const Reviews: React.FC = () => {
               </Alert>
             )}
 
-            {/* Profile Image File Upload Section */}
+            {/* Profile Avatar Upload with imgUploadService */}
             <Box
               sx={{
                 display: 'flex',
@@ -440,43 +591,62 @@ export const Reviews: React.FC = () => {
                 p: 2,
                 borderRadius: '14px',
                 backgroundColor: isDarkMode ? alpha('#ffffff', 0.03) : alpha('#000000', 0.02),
-                border: `1px dashed ${isDarkMode ? alpha('#ffffff', 0.15) : alpha('#000000', 0.15)}`,
+                border: `1px dashed ${isDarkMode ? alpha('#ffffff', 0.18) : alpha('#000000', 0.18)}`,
               }}
             >
-              <Avatar
-                src={profileUrl}
-                alt={name || 'User'}
-                sx={{
-                  width: 64,
-                  height: 64,
-                  bgcolor: alpha(theme.palette.primary.main, 0.2),
-                  color: theme.palette.primary.main,
-                  fontSize: '1.5rem',
-                  fontWeight: 700,
-                  border: `2px solid ${theme.palette.primary.main}`,
-                }}
-              >
-                {name ? name.charAt(0).toUpperCase() : 'U'}
-              </Avatar>
+              <Box sx={{ position: 'relative' }}>
+                <Avatar
+                  src={profileUrl || undefined}
+                  alt={name || 'User'}
+                  sx={{
+                    width: 72,
+                    height: 72,
+                    bgcolor: alpha(theme.palette.primary.main, 0.2),
+                    color: theme.palette.primary.main,
+                    fontSize: '1.75rem',
+                    fontWeight: 700,
+                    border: `2px solid ${theme.palette.primary.main}`,
+                  }}
+                >
+                  {uploadingImage ? (
+                    <CircularProgress size={28} color="inherit" />
+                  ) : name ? (
+                    name.charAt(0).toUpperCase()
+                  ) : (
+                    <ImageIcon />
+                  )}
+                </Avatar>
+              </Box>
 
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, flex: 1 }}>
                 <Typography variant="subtitle2" fontWeight={600}>
-                  Profile Picture (Optional)
+                  Reviewer Avatar (Optional)
                 </Typography>
-                <Box sx={{ display: 'flex', gap: 1 }}>
+                <Typography variant="caption" color="text.secondary">
+                  Upload directly to Cloudinary (Max size 5MB)
+                </Typography>
+
+                <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
                   <Button
                     component="label"
                     variant="outlined"
                     size="small"
-                    startIcon={<CloudUploadIcon />}
+                    disabled={uploadingImage || saving}
+                    startIcon={uploadingImage ? <CircularProgress size={16} /> : <CloudUploadIcon />}
                     sx={{
                       borderRadius: '8px',
                       textTransform: 'none',
                       fontWeight: 600,
                     }}
                   >
-                    Upload File
-                    <input type="file" hidden accept="image/*" onChange={handleImageUpload} />
+                    {uploadingImage ? `Uploading ${uploadProgress}%` : 'Upload to Cloudinary'}
+                    <input
+                      type="file"
+                      hidden
+                      accept="image/*"
+                      onChange={handleImageFileChange}
+                      disabled={uploadingImage || saving}
+                    />
                   </Button>
 
                   {profileUrl && (
@@ -484,6 +654,7 @@ export const Reviews: React.FC = () => {
                       variant="text"
                       color="error"
                       size="small"
+                      disabled={uploadingImage || saving}
                       onClick={() => setProfileUrl('')}
                       sx={{ borderRadius: '8px', textTransform: 'none' }}
                     >
@@ -491,13 +662,33 @@ export const Reviews: React.FC = () => {
                     </Button>
                   )}
                 </Box>
+
+                {uploadingImage && (
+                  <LinearProgress
+                    variant={uploadProgress > 0 ? 'determinate' : 'indeterminate'}
+                    value={uploadProgress}
+                    sx={{ borderRadius: 4, height: 6, mt: 0.5 }}
+                  />
+                )}
               </Box>
             </Box>
 
-            {/* Name Input */}
+            {/* Profile URL (Direct input or auto-filled by Cloudinary) */}
+            <TextField
+              label="Avatar Image URL (Auto-filled by upload or custom URL)"
+              placeholder="https://res.cloudinary.com/..."
+              value={profileUrl}
+              onChange={(e) => setProfileUrl(e.target.value)}
+              fullWidth
+              size="small"
+              variant="outlined"
+              helperText="You can also paste a direct image URL here."
+            />
+
+            {/* Reviewer Name */}
             <TextField
               label="Reviewer Name"
-              placeholder="e.g. John Doe"
+              placeholder="e.g. Sarah Jenkins"
               value={name}
               onChange={(e) => setName(e.target.value)}
               fullWidth
@@ -505,45 +696,74 @@ export const Reviews: React.FC = () => {
               variant="outlined"
             />
 
-            {/* Role Input */}
+            {/* Reviewer Role */}
             <TextField
-              label="Role / Badge"
-              placeholder="e.g. Verified Buyer, VIP Subscriber"
+              label="Role / Title (Optional)"
+              placeholder="e.g. Full Stack Engineer, Verified Buyer"
               value={role}
               onChange={(e) => setRole(e.target.value)}
               fullWidth
-              required
               variant="outlined"
             />
 
-            {/* Star Rating Input */}
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-              <Typography variant="body2" fontWeight={600} color="text.secondary">
-                Rating Stars ({starCount} / 5)
-              </Typography>
+            {/* Star Rating Input (0 to 5) */}
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 1,
+                p: 2,
+                borderRadius: '12px',
+                backgroundColor: isDarkMode ? alpha('#ffffff', 0.03) : alpha('#000000', 0.02),
+                border: `1px solid ${isDarkMode ? alpha('#ffffff', 0.08) : alpha('#000000', 0.08)}`,
+              }}
+            >
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="body2" fontWeight={600} color="text.secondary">
+                  Star Rating (0 - 5)
+                </Typography>
+                <Chip
+                  label={`${starCount} / 5 Stars`}
+                  size="small"
+                  color="primary"
+                  sx={{ fontWeight: 700, fontSize: '0.75rem' }}
+                />
+              </Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                 <Rating
+                  name="review-star-rating"
                   value={starCount}
-                  precision={0.5}
+                  precision={1}
                   onChange={(_, newValue) => {
-                    if (newValue !== null) setStarCount(newValue);
+                    if (newValue !== null) {
+                      setStarCount(newValue);
+                    }
                   }}
                   size="large"
                   emptyIcon={<StarIcon style={{ opacity: 0.3 }} fontSize="inherit" />}
                 />
-                <Chip label={`${starCount} Stars`} size="small" color="primary" sx={{ fontWeight: 700 }} />
+                <Button
+                  size="small"
+                  variant="text"
+                  color="inherit"
+                  onClick={() => setStarCount(0)}
+                  sx={{ fontSize: '0.75rem', textTransform: 'none', color: 'text.secondary' }}
+                >
+                  Set 0
+                </Button>
               </Box>
             </Box>
 
-            {/* Comment / Review Text */}
+            {/* Review Description */}
             <TextField
-              label="Review Content"
-              placeholder="Write the reviewer's feedback here..."
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
+              label="Review Description"
+              placeholder="Write the reviewer's testimonial or feedback..."
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
               fullWidth
+              required
               multiline
-              rows={3}
+              rows={4}
               variant="outlined"
             />
           </DialogContent>
@@ -555,16 +775,24 @@ export const Reviews: React.FC = () => {
               borderTop: `1px solid ${isDarkMode ? alpha('#ffffff', 0.08) : alpha('#000000', 0.08)}`,
             }}
           >
-            <Button onClick={handleCloseModal} variant="outlined" color="inherit" sx={{ borderRadius: '10px' }}>
+            <Button
+              onClick={handleCloseModal}
+              variant="outlined"
+              color="inherit"
+              disabled={saving || uploadingImage}
+              sx={{ borderRadius: '10px' }}
+            >
               Cancel
             </Button>
             <Button
               type="submit"
               variant="contained"
               color="primary"
+              disabled={saving || uploadingImage}
+              startIcon={saving ? <CircularProgress size={18} color="inherit" /> : undefined}
               sx={{ borderRadius: '10px', px: 3, fontWeight: 700 }}
             >
-              {editingReview ? 'Save Changes' : 'Create Review'}
+              {saving ? 'Saving...' : editingReview ? 'Save Changes' : 'Create Review'}
             </Button>
           </DialogActions>
         </form>
@@ -573,7 +801,7 @@ export const Reviews: React.FC = () => {
       {/* Delete Confirmation Dialog */}
       <Dialog
         open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
+        onClose={() => !deleting && setDeleteDialogOpen(false)}
         PaperProps={{
           sx: {
             borderRadius: '16px',
@@ -582,22 +810,34 @@ export const Reviews: React.FC = () => {
           },
         }}
       >
-        <DialogTitle fontWeight={700} sx={{ color: 'text.primary' }}>Delete Review?</DialogTitle>
+        <DialogTitle fontWeight={700} sx={{ color: 'text.primary' }}>
+          Delete Review?
+        </DialogTitle>
         <DialogContent>
           <Typography variant="body2" color="text.secondary">
-            Are you sure you want to delete review <strong>{reviewToDelete?.id}</strong> by{' '}
-            <strong>{reviewToDelete?.name}</strong>? This action cannot be undone.
+            Are you sure you want to delete the review by{' '}
+            <strong>{reviewToDelete?.name}</strong>? This will permanently remove it from the
+            database.
           </Typography>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={() => setDeleteDialogOpen(false)} color="inherit">
+          <Button onClick={() => setDeleteDialogOpen(false)} color="inherit" disabled={deleting}>
             Cancel
           </Button>
-          <Button onClick={handleConfirmDelete} variant="contained" color="error" sx={{ fontWeight: 700 }}>
-            Delete
+          <Button
+            onClick={handleConfirmDelete}
+            variant="contained"
+            color="error"
+            disabled={deleting}
+            startIcon={deleting ? <CircularProgress size={18} color="inherit" /> : undefined}
+            sx={{ fontWeight: 700 }}
+          >
+            {deleting ? 'Deleting...' : 'Delete'}
           </Button>
         </DialogActions>
       </Dialog>
     </Box>
   );
 };
+
+export default Reviews;

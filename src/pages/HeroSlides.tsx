@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -15,6 +15,8 @@ import {
   alpha,
   Alert,
   CardMedia,
+  CircularProgress,
+  LinearProgress,
 } from '@mui/material';
 import type { GridColDef } from '@mui/x-data-grid';
 import {
@@ -25,27 +27,58 @@ import {
   Close as CloseIcon,
   ViewCarousel as ViewCarouselIcon,
   Image as ImageIcon,
+  Refresh as RefreshIcon,
 } from '@mui/icons-material';
 import { toast } from 'react-toastify';
 import { CustomDataTable } from '../components/common/CustomDataTable';
-import { mockHeroSlides, type HeroSlide } from '../data/mockHeroSlides';
+import { heroSlideService } from '../services/heroSlideService';
+import { imgUploadService } from '../services/imgUploadService';
+import type { HeroSlide } from '../types/heroSlide';
 
 export const HeroSlides: React.FC = () => {
   const theme = useTheme();
   const isDarkMode = theme.palette.mode === 'dark';
 
-  const [slides, setSlides] = useState<HeroSlide[]>(mockHeroSlides);
+  // Data states
+  const [slides, setSlides] = useState<HeroSlide[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Modal State
   const [modalOpen, setModalOpen] = useState(false);
   const [editingSlide, setEditingSlide] = useState<HeroSlide | null>(null);
+  const [saving, setSaving] = useState(false);
 
-  // Form State: only Order No and Image
+  // Form State: Order No and Image
   const [order, setOrder] = useState<number>(1);
   const [imageUrl, setImageUrl] = useState('');
   const [formError, setFormError] = useState('');
 
+  // Image Upload State
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
+
   // Delete State
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [slideToDelete, setSlideToDelete] = useState<HeroSlide | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  // Fetch all slides from backend
+  const fetchSlides = useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await heroSlideService.getAllSlides();
+      setSlides(Array.isArray(data) ? data : []);
+    } catch (error: any) {
+      console.error('Failed to fetch hero slides:', error);
+      toast.error(error?.response?.data?.message || 'Failed to load slides from server');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchSlides();
+  }, [fetchSlides]);
 
   // Sorted by Order No ascending
   const sortedSlides = useMemo(() => {
@@ -55,9 +88,12 @@ export const HeroSlides: React.FC = () => {
   // Open Modal for Create
   const handleOpenCreate = () => {
     setEditingSlide(null);
-    setOrder(slides.length + 1);
+    // Find next available order number
+    const maxOrder = slides.reduce((max, s) => (s.order > max ? s.order : max), 0);
+    setOrder(maxOrder + 1);
     setImageUrl('');
     setFormError('');
+    setUploadProgress(0);
     setModalOpen(true);
   };
 
@@ -67,67 +103,104 @@ export const HeroSlides: React.FC = () => {
     setOrder(slide.order);
     setImageUrl(slide.imageUrl);
     setFormError('');
+    setUploadProgress(0);
     setModalOpen(true);
   };
 
   const handleCloseModal = () => {
+    if (saving || uploadingImage) return;
     setModalOpen(false);
     setEditingSlide(null);
+    setFormError('');
   };
 
-  // Image Upload Handler
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Cloudinary Image Upload via imgUploadService
+  const handleImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 8 * 1024 * 1024) {
-        setFormError('Image size must be under 8MB');
-        toast.error('Image size must be under 8MB');
-        return;
+    if (!file) return;
+
+    e.target.value = '';
+    setUploadingImage(true);
+    setUploadProgress(0);
+    setFormError('');
+
+    try {
+      const response = await imgUploadService.uploadImage(file, {
+        folder: 'techflix/hero',
+        onUploadProgress: (progress) => {
+          if (progress.total) {
+            const percent = Math.round((progress.loaded * 100) / progress.total);
+            setUploadProgress(percent);
+          }
+        },
+      });
+
+      if (response.success && response.url) {
+        setImageUrl(response.url);
+        toast.success('Slide banner uploaded successfully!');
+      } else {
+        const errorMsg = response.message || 'Image upload failed';
+        setFormError(errorMsg);
+        toast.error(errorMsg);
       }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImageUrl(reader.result as string);
-        setFormError('');
-        toast.success('Slide banner image selected!');
-      };
-      reader.readAsDataURL(file);
+    } catch (error: any) {
+      const errorMsg = error?.message || 'Failed to upload image';
+      setFormError(errorMsg);
+      toast.error(errorMsg);
+    } finally {
+      setUploadingImage(false);
     }
   };
 
-  // Submit Handler
-  const handleSubmitForm = (e: React.FormEvent) => {
+  // Submit Handler for Create / Edit
+  const handleSubmitForm = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (order === undefined || isNaN(order) || order < 0) {
+      setFormError('Please enter a valid positive order number.');
+      toast.error('Order number must be 0 or greater.');
+      return;
+    }
     if (!imageUrl.trim()) {
-      setFormError('Please select or enter an image for the slide.');
+      setFormError('Please select or upload an image for the slide.');
       toast.error('Slide image is required.');
       return;
     }
 
-    if (editingSlide) {
-      setSlides((prev) =>
-        prev.map((item) =>
-          item.id === editingSlide.id
-            ? {
-              ...item,
-              order: Number(order),
-              imageUrl: imageUrl.trim(),
-            }
-            : item
-        )
-      );
-      toast.success(`Slide ${editingSlide.id} updated successfully!`);
-    } else {
-      const newSlide: HeroSlide = {
-        id: `SLIDE-00${slides.length + 1}`,
-        order: Number(order),
-        imageUrl: imageUrl.trim(),
-        createdAt: new Date().toISOString().split('T')[0],
-      };
-      setSlides((prev) => [...prev, newSlide]);
-      toast.success(`New slide (${newSlide.id}) created!`);
-    }
+    setSaving(true);
+    setFormError('');
 
-    handleCloseModal();
+    try {
+      if (editingSlide) {
+        // Update Slide
+        const updated = await heroSlideService.updateSlide(editingSlide.id, {
+          order: Number(order),
+          imageUrl: imageUrl.trim(),
+        });
+
+        setSlides((prev) =>
+          prev.map((item) => (item.id === editingSlide.id ? updated : item))
+        );
+        toast.success('Slide updated successfully!');
+      } else {
+        // Create Slide
+        const created = await heroSlideService.createSlide({
+          order: Number(order),
+          imageUrl: imageUrl.trim(),
+        });
+
+        setSlides((prev) => [...prev, created]);
+        toast.success('New slide created successfully!');
+      }
+
+      handleCloseModal();
+    } catch (error: any) {
+      console.error('Error saving slide:', error);
+      const message = error?.response?.data?.message || 'Failed to save slide';
+      setFormError(message);
+      toast.error(message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   // Delete Action
@@ -136,13 +209,23 @@ export const HeroSlides: React.FC = () => {
     setDeleteDialogOpen(true);
   };
 
-  const handleConfirmDelete = () => {
-    if (slideToDelete) {
+  const handleConfirmDelete = async () => {
+    if (!slideToDelete) return;
+    setDeleting(true);
+
+    try {
+      await heroSlideService.deleteSlide(slideToDelete.id);
       setSlides((prev) => prev.filter((item) => item.id !== slideToDelete.id));
-      toast.error(`Slide ${slideToDelete.id} deleted!`, { icon: '🗑️' });
+      toast.success(`Slide #${slideToDelete.order} deleted successfully!`);
+      setDeleteDialogOpen(false);
+      setSlideToDelete(null);
+    } catch (error: any) {
+      console.error('Error deleting slide:', error);
+      const message = error?.response?.data?.message || 'Failed to delete slide';
+      toast.error(message);
+    } finally {
+      setDeleting(false);
     }
-    setDeleteDialogOpen(false);
-    setSlideToDelete(null);
   };
 
   // Table Columns - ONLY ID, Order No., Image, Actions
@@ -151,13 +234,27 @@ export const HeroSlides: React.FC = () => {
       {
         field: 'id',
         headerName: 'Slide ID',
-        width: 130,
+        width: 140,
         renderCell: (params) => (
-          <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
-            <Typography variant="body2" fontWeight={700} sx={{ fontFamily: 'monospace', color: 'primary.main' }}>
-              {params.value}
-            </Typography>
-          </Box>
+          <Tooltip title={params.value || ''} arrow>
+            <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+              <Typography
+                variant="body2"
+                fontWeight={700}
+                sx={{
+                  fontFamily: 'monospace',
+                  color: 'primary.main',
+                  fontSize: '0.75rem',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  maxWidth: 120,
+                }}
+              >
+                {params.value ? `${params.value.slice(0, 8)}...` : '—'}
+              </Typography>
+            </Box>
+          </Tooltip>
         ),
       },
       {
@@ -184,7 +281,7 @@ export const HeroSlides: React.FC = () => {
       },
       {
         field: 'imageUrl',
-        headerName: 'Slide Image',
+        headerName: 'Slide Image Banner',
         flex: 1,
         minWidth: 260,
         sortable: false,
@@ -283,32 +380,51 @@ export const HeroSlides: React.FC = () => {
           </Box>
         </Box>
 
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<AddIcon />}
-          onClick={handleOpenCreate}
-          sx={{
-            fontWeight: 700,
-            px: 3,
-            py: 1.2,
-            borderRadius: '12px',
-            boxShadow: `0 8px 20px ${alpha(theme.palette.primary.main, 0.35)}`,
-            '&:hover': {
-              boxShadow: `0 10px 24px ${alpha(theme.palette.primary.main, 0.5)}`,
-            },
-          }}
-        >
-          Create Slide
-        </Button>
+        <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
+          <Tooltip title="Refresh slides">
+            <IconButton
+              onClick={fetchSlides}
+              disabled={loading}
+              sx={{
+                borderRadius: '12px',
+                border: `1px solid ${isDarkMode ? alpha('#ffffff', 0.15) : alpha('#000000', 0.15)}`,
+                p: 1.2,
+              }}
+            >
+              <RefreshIcon sx={{ animation: loading ? 'spin 1s linear infinite' : 'none' }} />
+            </IconButton>
+          </Tooltip>
+
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<AddIcon />}
+            onClick={handleOpenCreate}
+            sx={{
+              fontWeight: 700,
+              px: 3,
+              py: 1.2,
+              borderRadius: '12px',
+              boxShadow: `0 8px 20px ${alpha(theme.palette.primary.main, 0.35)}`,
+              '&:hover': {
+                boxShadow: `0 10px 24px ${alpha(theme.palette.primary.main, 0.5)}`,
+              },
+            }}
+          >
+            Create Slide
+          </Button>
+        </Box>
       </Box>
 
       {/* Main Data Table */}
       <CustomDataTable
         rows={sortedSlides}
         columns={columns}
+        loading={loading}
         title="Carousel Banners"
+        subtitle="Manage hero banner slides in sequential order"
         searchPlaceholder="Search slides by ID or order number..."
+        onRefresh={fetchSlides}
       />
 
       {/* Create / Edit Slide Dialog Modal */}
@@ -334,9 +450,7 @@ export const HeroSlides: React.FC = () => {
             px: 3,
             display: 'flex',
             alignItems: 'center',
-            justify: 'space-between',
-            width: '100%',
-            color: 'text.primary',
+            justifyContent: 'space-between',
             borderBottom: `1px solid ${isDarkMode ? alpha('#ffffff', 0.08) : alpha('#000000', 0.08)}`,
           }}
         >
@@ -349,9 +463,9 @@ export const HeroSlides: React.FC = () => {
           <IconButton
             size="small"
             onClick={handleCloseModal}
+            disabled={saving || uploadingImage}
             sx={{
               color: 'text.secondary',
-              ml: 'auto',
               '&:hover': {
                 color: 'text.primary',
                 backgroundColor: isDarkMode ? alpha('#ffffff', 0.1) : alpha('#000000', 0.08),
@@ -379,10 +493,10 @@ export const HeroSlides: React.FC = () => {
               fullWidth
               required
               variant="outlined"
-              helperText="Numerical sequence for ordering slides in carousel"
+              helperText="Numerical sequence for ordering slides in carousel (1, 2, 3...)"
             />
 
-            {/* Banner Image Preview & File Upload */}
+            {/* Banner Image Preview & Cloudinary Upload */}
             <Box
               sx={{
                 display: 'flex',
@@ -391,11 +505,11 @@ export const HeroSlides: React.FC = () => {
                 p: 2,
                 borderRadius: '14px',
                 backgroundColor: isDarkMode ? alpha('#ffffff', 0.03) : alpha('#000000', 0.02),
-                border: `1px dashed ${isDarkMode ? alpha('#ffffff', 0.15) : alpha('#000000', 0.15)}`,
+                border: `1px dashed ${isDarkMode ? alpha('#ffffff', 0.18) : alpha('#000000', 0.18)}`,
               }}
             >
               <Typography variant="subtitle2" fontWeight={600}>
-                Slide Image *
+                Slide Banner Image *
               </Typography>
 
               <Box
@@ -411,7 +525,14 @@ export const HeroSlides: React.FC = () => {
                   border: `1px solid ${isDarkMode ? alpha('#ffffff', 0.1) : alpha('#000000', 0.1)}`,
                 }}
               >
-                {imageUrl ? (
+                {uploadingImage ? (
+                  <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                    <CircularProgress size={36} color="primary" />
+                    <Typography variant="caption" color="text.secondary">
+                      Uploading to Cloudinary {uploadProgress > 0 ? `(${uploadProgress}%)` : ''}...
+                    </Typography>
+                  </Box>
+                ) : imageUrl ? (
                   <CardMedia
                     component="img"
                     image={imageUrl}
@@ -421,31 +542,59 @@ export const HeroSlides: React.FC = () => {
                 ) : (
                   <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1, color: 'text.secondary' }}>
                     <ImageIcon sx={{ fontSize: 48, opacity: 0.4 }} />
-                    <Typography variant="body2">No image selected</Typography>
+                    <Typography variant="body2">No banner image selected</Typography>
                   </Box>
                 )}
               </Box>
 
-              <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
+              <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', flexWrap: 'wrap' }}>
                 <Button
                   component="label"
                   variant="outlined"
                   size="small"
-                  startIcon={<CloudUploadIcon />}
+                  disabled={uploadingImage || saving}
+                  startIcon={uploadingImage ? <CircularProgress size={16} /> : <CloudUploadIcon />}
                   sx={{ borderRadius: '8px', textTransform: 'none', fontWeight: 600 }}
                 >
-                  Upload Image File
-                  <input type="file" hidden accept="image/*" onChange={handleImageUpload} />
+                  {uploadingImage ? `Uploading ${uploadProgress}%` : 'Upload to Cloudinary'}
+                  <input
+                    type="file"
+                    hidden
+                    accept="image/*"
+                    onChange={handleImageFileChange}
+                    disabled={uploadingImage || saving}
+                  />
                 </Button>
 
+                {imageUrl && (
+                  <Button
+                    variant="text"
+                    color="error"
+                    size="small"
+                    disabled={uploadingImage || saving}
+                    onClick={() => setImageUrl('')}
+                    sx={{ borderRadius: '8px', textTransform: 'none' }}
+                  >
+                    Remove
+                  </Button>
+                )}
+
                 <Typography variant="caption" color="text.secondary">
-                  or enter URL below
+                  or paste a direct image URL below
                 </Typography>
               </Box>
 
+              {uploadingImage && (
+                <LinearProgress
+                  variant={uploadProgress > 0 ? 'determinate' : 'indeterminate'}
+                  value={uploadProgress}
+                  sx={{ borderRadius: 4, height: 6 }}
+                />
+              )}
+
               <TextField
-                label="Image URL"
-                placeholder="https://images.unsplash.com/..."
+                label="Banner Image URL"
+                placeholder="https://res.cloudinary.com/..."
                 value={imageUrl}
                 onChange={(e) => setImageUrl(e.target.value)}
                 fullWidth
@@ -462,16 +611,24 @@ export const HeroSlides: React.FC = () => {
               borderTop: `1px solid ${isDarkMode ? alpha('#ffffff', 0.08) : alpha('#000000', 0.08)}`,
             }}
           >
-            <Button onClick={handleCloseModal} variant="outlined" color="inherit" sx={{ borderRadius: '10px' }}>
+            <Button
+              onClick={handleCloseModal}
+              variant="outlined"
+              color="inherit"
+              disabled={saving || uploadingImage}
+              sx={{ borderRadius: '10px' }}
+            >
               Cancel
             </Button>
             <Button
               type="submit"
               variant="contained"
               color="primary"
+              disabled={saving || uploadingImage}
+              startIcon={saving ? <CircularProgress size={18} color="inherit" /> : undefined}
               sx={{ borderRadius: '10px', px: 3, fontWeight: 700 }}
             >
-              {editingSlide ? 'Save Changes' : 'Create Slide'}
+              {saving ? 'Saving...' : editingSlide ? 'Save Changes' : 'Create Slide'}
             </Button>
           </DialogActions>
         </form>
@@ -480,7 +637,7 @@ export const HeroSlides: React.FC = () => {
       {/* Delete Confirmation Dialog */}
       <Dialog
         open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
+        onClose={() => !deleting && setDeleteDialogOpen(false)}
         PaperProps={{
           sx: {
             borderRadius: '16px',
@@ -489,7 +646,9 @@ export const HeroSlides: React.FC = () => {
           },
         }}
       >
-        <DialogTitle fontWeight={700} sx={{ color: 'text.primary' }}>Delete Hero Slide?</DialogTitle>
+        <DialogTitle fontWeight={700} sx={{ color: 'text.primary' }}>
+          Delete Hero Slide?
+        </DialogTitle>
         <DialogContent>
           <Typography variant="body2" color="text.secondary">
             Are you sure you want to delete slide <strong>{slideToDelete?.id}</strong> (Order #{slideToDelete?.order})?
@@ -497,14 +656,23 @@ export const HeroSlides: React.FC = () => {
           </Typography>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={() => setDeleteDialogOpen(false)} color="inherit">
+          <Button onClick={() => setDeleteDialogOpen(false)} color="inherit" disabled={deleting}>
             Cancel
           </Button>
-          <Button onClick={handleConfirmDelete} variant="contained" color="error" sx={{ fontWeight: 700 }}>
-            Delete
+          <Button
+            onClick={handleConfirmDelete}
+            variant="contained"
+            color="error"
+            disabled={deleting}
+            startIcon={deleting ? <CircularProgress size={18} color="inherit" /> : undefined}
+            sx={{ fontWeight: 700 }}
+          >
+            {deleting ? 'Deleting...' : 'Delete'}
           </Button>
         </DialogActions>
       </Dialog>
     </Box>
   );
 };
+
+export default HeroSlides;
