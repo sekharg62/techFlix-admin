@@ -35,6 +35,10 @@ const drawerWidth = 240;
 interface SidebarProps {
   open: boolean;
   toggleDrawer: () => void;
+  /** Phone/tablet: render as a slide-in drawer controlled by mobileOpen. */
+  isMobile?: boolean;
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
 }
 
 const menuItems = [
@@ -50,7 +54,7 @@ const menuItems = [
   { text: 'Payment Methods', icon: <SettingsIcon />, path: '/dashboard/settings' },
 ];
 
-export const Sidebar: React.FC<SidebarProps> = ({ open, toggleDrawer }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ open, toggleDrawer, isMobile = false, mobileOpen = false, onMobileClose }) => {
   const theme = useTheme();
   const location = useLocation();
   const { logout } = useUser();
@@ -58,27 +62,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, toggleDrawer }) => {
   const isActive = (path: string) =>
     path === '/dashboard' ? location.pathname === path : location.pathname.startsWith(path);
 
-  return (
-    <Drawer
-      variant="permanent"
-      open={open}
-      sx={{
-        width: open ? drawerWidth : theme.spacing(7),
-        flexShrink: 0,
-        whiteSpace: 'nowrap',
-        boxSizing: 'border-box',
-        '& .MuiDrawer-paper': {
-          width: open ? drawerWidth : theme.spacing(7),
-          transition: theme.transitions.create('width', {
-            easing: theme.transitions.easing.sharp,
-            duration: open ? theme.transitions.duration.enteringScreen : theme.transitions.duration.leavingScreen,
-          }),
-          overflowX: 'hidden',
-          backgroundColor: theme.palette.background.paper,
-          borderRight: `1px solid ${theme.palette.divider}`,
-        },
-      }}
-    >
+  const content = (
+    <>
       <Toolbar
         sx={{
           display: 'flex',
@@ -87,7 +72,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, toggleDrawer }) => {
           px: [1],
         }}
       >
-        <IconButton onClick={toggleDrawer}>
+        <IconButton onClick={isMobile ? onMobileClose : toggleDrawer} aria-label={isMobile ? 'Close menu' : 'Toggle sidebar'}>
           {open ? <ChevronLeftIcon /> : <MenuIcon />}
         </IconButton>
       </Toolbar>
@@ -166,6 +151,50 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, toggleDrawer }) => {
           </ListItem>
         </List>
       </Box>
-    </Drawer>
+    </>
+  );
+
+  return (
+    isMobile ? (
+      <Drawer
+        variant="temporary"
+        open={mobileOpen}
+        onClose={onMobileClose}
+        ModalProps={{ keepMounted: true }}
+        sx={{
+          '& .MuiDrawer-paper': {
+            width: drawerWidth,
+            boxSizing: 'border-box',
+            backgroundColor: theme.palette.background.paper,
+            backgroundImage: 'none',
+          },
+        }}
+      >
+        {content}
+      </Drawer>
+    ) : (
+      <Drawer
+      variant="permanent"
+      open={open}
+      sx={{
+        width: open ? drawerWidth : theme.spacing(7),
+        flexShrink: 0,
+        whiteSpace: 'nowrap',
+        boxSizing: 'border-box',
+        '& .MuiDrawer-paper': {
+          width: open ? drawerWidth : theme.spacing(7),
+          transition: theme.transitions.create('width', {
+            easing: theme.transitions.easing.sharp,
+            duration: open ? theme.transitions.duration.enteringScreen : theme.transitions.duration.leavingScreen,
+          }),
+          overflowX: 'hidden',
+          backgroundColor: theme.palette.background.paper,
+          borderRight: `1px solid ${theme.palette.divider}`,
+        },
+      }}
+    >
+        {content}
+      </Drawer>
+    )
   );
 };

@@ -46,7 +46,7 @@ function App() {
     <UserProvider>
       <CustomThemeProvider>
         <ToastContainer
-          position="top-right"
+          position={typeof window !== 'undefined' && window.innerWidth < 600 ? 'top-center' : 'top-right'}
           autoClose={3500}
           hideProgressBar={false}
           newestOnTop={false}

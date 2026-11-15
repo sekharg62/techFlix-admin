@@ -164,14 +164,14 @@ export const CustomDataTable: React.FC<CustomDataTableProps> = ({
         }}
       >
         {/* Title & Count Badge */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap', minWidth: 0 }}>
           {title && (
             <Typography variant="h6" sx={{ fontWeight: 700, letterSpacing: '-0.01em' }}>
               {title}
             </Typography>
           )}
           {subtitle && (
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' } }}>
               {subtitle}
             </Typography>
           )}

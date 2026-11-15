@@ -865,35 +865,36 @@ export const Products: React.FC = () => {
       <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' },
+          gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' },
           gap: 2,
         }}
       >
         <Paper
           elevation={0}
           sx={{
-            p: 2.5,
+            p: { xs: 1.5, sm: 2.5 },
             borderRadius: '16px',
             backgroundColor: isDarkMode ? '#131318' : '#ffffff',
             border: `1px solid ${isDarkMode ? alpha('#ffffff', 0.08) : alpha('#000000', 0.08)}`,
             display: 'flex',
             alignItems: 'center',
-            gap: 2,
+            gap: { xs: 1.25, sm: 2 },
+            minWidth: 0,
           }}
         >
           <Avatar
             sx={{
               bgcolor: alpha(theme.palette.primary.main, 0.12),
               color: theme.palette.primary.main,
-              width: 46,
-              height: 46,
+              width: { xs: 36, sm: 46 },
+              height: { xs: 36, sm: 46 },
               borderRadius: '12px',
             }}
           >
             <InventoryIcon />
           </Avatar>
-          <Box>
-            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase' }}>
+          <Box sx={{ minWidth: 0 }}>
+            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase', fontSize: { xs: '0.7rem', sm: undefined }, lineHeight: 1.3, display: 'block' }}>
               Total Products
             </Typography>
             <Typography variant="h5" sx={{ fontWeight: 700 }}>
@@ -905,28 +906,29 @@ export const Products: React.FC = () => {
         <Paper
           elevation={0}
           sx={{
-            p: 2.5,
+            p: { xs: 1.5, sm: 2.5 },
             borderRadius: '16px',
             backgroundColor: isDarkMode ? '#131318' : '#ffffff',
             border: `1px solid ${isDarkMode ? alpha('#ffffff', 0.08) : alpha('#000000', 0.08)}`,
             display: 'flex',
             alignItems: 'center',
-            gap: 2,
+            gap: { xs: 1.25, sm: 2 },
+            minWidth: 0,
           }}
         >
           <Avatar
             sx={{
               bgcolor: alpha(theme.palette.success?.main || '#2e7d32', 0.12),
               color: theme.palette.success?.main || '#2e7d32',
-              width: 46,
-              height: 46,
+              width: { xs: 36, sm: 46 },
+              height: { xs: 36, sm: 46 },
               borderRadius: '12px',
             }}
           >
             <CheckCircleIcon />
           </Avatar>
-          <Box>
-            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase' }}>
+          <Box sx={{ minWidth: 0 }}>
+            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase', fontSize: { xs: '0.7rem', sm: undefined }, lineHeight: 1.3, display: 'block' }}>
               In Stock
             </Typography>
             <Typography variant="h5" sx={{ fontWeight: 700 }}>
@@ -938,28 +940,29 @@ export const Products: React.FC = () => {
         <Paper
           elevation={0}
           sx={{
-            p: 2.5,
+            p: { xs: 1.5, sm: 2.5 },
             borderRadius: '16px',
             backgroundColor: isDarkMode ? '#131318' : '#ffffff',
             border: `1px solid ${isDarkMode ? alpha('#ffffff', 0.08) : alpha('#000000', 0.08)}`,
             display: 'flex',
             alignItems: 'center',
-            gap: 2,
+            gap: { xs: 1.25, sm: 2 },
+            minWidth: 0,
           }}
         >
           <Avatar
             sx={{
               bgcolor: alpha(theme.palette.warning?.main || '#ed6c02', 0.12),
               color: theme.palette.warning?.main || '#ed6c02',
-              width: 46,
-              height: 46,
+              width: { xs: 36, sm: 46 },
+              height: { xs: 36, sm: 46 },
               borderRadius: '12px',
             }}
           >
             <LoyaltyIcon />
           </Avatar>
-          <Box>
-            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase' }}>
+          <Box sx={{ minWidth: 0 }}>
+            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase', fontSize: { xs: '0.7rem', sm: undefined }, lineHeight: 1.3, display: 'block' }}>
               Active Plans
             </Typography>
             <Typography variant="h5" sx={{ fontWeight: 700 }}>
@@ -971,28 +974,29 @@ export const Products: React.FC = () => {
         <Paper
           elevation={0}
           sx={{
-            p: 2.5,
+            p: { xs: 1.5, sm: 2.5 },
             borderRadius: '16px',
             backgroundColor: isDarkMode ? '#131318' : '#ffffff',
             border: `1px solid ${isDarkMode ? alpha('#ffffff', 0.08) : alpha('#000000', 0.08)}`,
             display: 'flex',
             alignItems: 'center',
-            gap: 2,
+            gap: { xs: 1.25, sm: 2 },
+            minWidth: 0,
           }}
         >
           <Avatar
             sx={{
               bgcolor: alpha(theme.palette.info?.main || '#0288d1', 0.12),
               color: theme.palette.info?.main || '#0288d1',
-              width: 46,
-              height: 46,
+              width: { xs: 36, sm: 46 },
+              height: { xs: 36, sm: 46 },
               borderRadius: '12px',
             }}
           >
             <CategoryIcon />
           </Avatar>
-          <Box>
-            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase' }}>
+          <Box sx={{ minWidth: 0 }}>
+            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase', fontSize: { xs: '0.7rem', sm: undefined }, lineHeight: 1.3, display: 'block' }}>
               Categories
             </Typography>
             <Typography variant="h5" sx={{ fontWeight: 700 }}>
@@ -1128,8 +1132,8 @@ export const Products: React.FC = () => {
         <DialogTitle
           sx={{
             m: 0,
-            p: 2.5,
-            px: 3,
+            p: { xs: 2, sm: 2.5 },
+            px: { xs: 2, sm: 3 },
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -1159,10 +1163,13 @@ export const Products: React.FC = () => {
         </DialogTitle>
 
         {/* Modal Navigation Tabs */}
-        <Box sx={{ borderBottom: `1px solid ${isDarkMode ? alpha('#ffffff', 0.08) : alpha('#000000', 0.08)}`, px: 3 }}>
+        <Box sx={{ borderBottom: `1px solid ${isDarkMode ? alpha('#ffffff', 0.08) : alpha('#000000', 0.08)}`, px: { xs: 1, sm: 3 } }}>
           <Tabs
             value={activeTab}
             onChange={(_, val) => setActiveTab(val)}
+            variant="scrollable"
+            scrollButtons="auto"
+            allowScrollButtonsMobile
             sx={{
               '& .MuiTab-root': {
                 textTransform: 'none',
@@ -1179,7 +1186,7 @@ export const Products: React.FC = () => {
         </Box>
 
         <form onSubmit={handleSubmitForm}>
-          <DialogContent sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 2.5, maxHeight: '68vh', overflowY: 'auto' }}>
+          <DialogContent sx={{ p: { xs: 2, sm: 3 }, display: 'flex', flexDirection: 'column', gap: 2.5, maxHeight: { xs: 'calc(100vh - 210px)', sm: '68vh' }, overflowY: 'auto' }}>
             {formError && (
               <Alert severity="error" sx={{ borderRadius: '10px' }}>
                 {formError}
@@ -1756,7 +1763,7 @@ export const Products: React.FC = () => {
 
           <DialogActions
             sx={{
-              p: 3,
+              p: { xs: 2, sm: 3 },
               pt: 2,
               borderTop: `1px solid ${isDarkMode ? alpha('#ffffff', 0.08) : alpha('#000000', 0.08)}`,
               display: 'flex',
@@ -1828,7 +1835,7 @@ export const Products: React.FC = () => {
       >
         <DialogTitle
           sx={{
-            p: 2.5,
+            p: { xs: 2, sm: 2.5 },
             px: 3,
             display: 'flex',
             alignItems: 'center',
@@ -1843,7 +1850,7 @@ export const Products: React.FC = () => {
             <CloseIcon />
           </IconButton>
         </DialogTitle>
-        <DialogContent sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+        <DialogContent sx={{ p: { xs: 2, sm: 3 }, display: 'flex', flexDirection: 'column', gap: 2.5 }}>
           {previewProduct && (
             <>
               {previewProduct.imgUrl && (
@@ -1891,7 +1898,7 @@ export const Products: React.FC = () => {
                 <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
                   Available Plans ({previewProduct.plans?.length || 0})
                 </Typography>
-                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 1 }}>
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' }, gap: 1 }}>
                   {(previewProduct.plans || []).map((plan, i) => (
                     <Box
                       key={i}

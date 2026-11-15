@@ -149,7 +149,7 @@ export const DashboardHome: React.FC = () => {
       )}
 
       <Grid container spacing={2.5} sx={{ mb: 3 }}>
-        <Grid size={{ xs: 12, sm: 6, lg: 2.4 }}>
+        <Grid size={{ xs: 6, sm: 6, lg: 2.4 }}>
           <KpiCard
             title="Revenue"
             value={formatBDT(s?.revenue)}
@@ -159,7 +159,7 @@ export const DashboardHome: React.FC = () => {
             loading={initialLoading}
           />
         </Grid>
-        <Grid size={{ xs: 12, sm: 6, lg: 2.4 }}>
+        <Grid size={{ xs: 6, sm: 6, lg: 2.4 }}>
           <KpiCard
             title="Total orders"
             value={String(s?.totalOrders ?? 0)}
@@ -170,7 +170,7 @@ export const DashboardHome: React.FC = () => {
             accent="#5b8def"
           />
         </Grid>
-        <Grid size={{ xs: 12, sm: 6, lg: 2.4 }}>
+        <Grid size={{ xs: 6, sm: 6, lg: 2.4 }}>
           <KpiCard
             title="Paid orders"
             value={String(s?.paidOrders ?? 0)}
@@ -181,7 +181,7 @@ export const DashboardHome: React.FC = () => {
             accent="#2e7d32"
           />
         </Grid>
-        <Grid size={{ xs: 12, sm: 6, lg: 2.4 }}>
+        <Grid size={{ xs: 6, sm: 6, lg: 2.4 }}>
           <KpiCard
             title="Avg. order value"
             value={formatBDT(s?.averageOrderValue)}

@@ -1,5 +1,5 @@
 import React, { createContext, useState, useMemo, useContext, useEffect } from 'react';
-import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
+import { ThemeProvider, createTheme, responsiveFontSizes, CssBaseline } from '@mui/material';
 
 type ThemeMode = 'light' | 'dark';
 
@@ -36,7 +36,8 @@ export const CustomThemeProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const theme = useMemo(
     () =>
-      createTheme({
+      // responsiveFontSizes: h1–h6 shrink automatically on phones
+      responsiveFontSizes(createTheme({
         palette: {
           mode,
           primary: {
@@ -74,10 +75,27 @@ export const CustomThemeProvider: React.FC<{ children: React.ReactNode }> = ({ c
           },
           MuiDialog: {
             styleOverrides: {
-              paper: {
+              // Phones: dialogs use almost the full screen instead of a cramped centred box
+              paper: ({ theme: t }) => ({
                 backgroundColor: mode === 'dark' ? '#18181f' : '#ffffff',
                 color: mode === 'dark' ? '#ffffff' : 'inherit',
-              },
+                [t.breakpoints.down('sm')]: {
+                  margin: 8,
+                  width: 'calc(100% - 16px)',
+                  maxWidth: 'calc(100% - 16px) !important',
+                  maxHeight: 'calc(100% - 16px)',
+                },
+              }),
+            },
+          },
+          MuiDialogContent: {
+            styleOverrides: {
+              root: ({ theme: t }) => ({ [t.breakpoints.down('sm')]: { padding: '12px 14px' } }),
+            },
+          },
+          MuiDialogActions: {
+            styleOverrides: {
+              root: ({ theme: t }) => ({ [t.breakpoints.down('sm')]: { padding: '10px 14px', flexWrap: 'wrap', gap: 8 } }),
             },
           },
           MuiDialogTitle: {
@@ -89,7 +107,7 @@ export const CustomThemeProvider: React.FC<{ children: React.ReactNode }> = ({ c
             },
           },
         },
-      }),
+      })),
     [mode]
   );
 

@@ -30,8 +30,9 @@ export const KpiCard: React.FC<KpiCardProps> = ({ title, value, icon, trend, cap
     <Paper
       elevation={0}
       sx={{
-        p: 2.5,
+        p: { xs: 1.75, sm: 2.5 },
         height: '100%',
+        minWidth: 0,
         borderRadius: '16px',
         backgroundColor: isDark ? '#121216' : '#ffffff',
         border: `1px solid ${isDark ? alpha('#ffffff', 0.08) : alpha('#000000', 0.08)}`,

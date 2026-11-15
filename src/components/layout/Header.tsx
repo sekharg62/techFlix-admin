@@ -19,12 +19,13 @@ import { useUser } from '../../context/UserContext';
 
 interface HeaderProps {
   open: boolean;
+  isMobile?: boolean;
   toggleDrawer: () => void;
 }
 
 const drawerWidth = 240;
 
-export const Header: React.FC<HeaderProps> = ({ open, toggleDrawer }) => {
+export const Header: React.FC<HeaderProps> = ({ open, isMobile = false, toggleDrawer }) => {
   const muiTheme = useMuiTheme();
   const { mode, toggleTheme } = useThemeContext();
   const { user } = useUser();
@@ -59,22 +60,22 @@ export const Header: React.FC<HeaderProps> = ({ open, toggleDrawer }) => {
         }),
       }}
     >
-      <Toolbar>
+      <Toolbar sx={{ px: { xs: 1.5, sm: 2, md: 3 } }}>
         <IconButton
           color="inherit"
-          aria-label="open drawer"
+          aria-label="open menu"
           onClick={toggleDrawer}
           edge="start"
-          sx={{ marginRight: 5, ...(open && { display: 'none' }) }}
+          sx={{ mr: { xs: 1, md: 5 }, ...(open && !isMobile && { display: 'none' }) }}
         >
           <MenuIcon />
         </IconButton>
 
-        <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, fontWeight: 700 }}>
+        <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, fontWeight: 700, fontSize: { xs: '1.05rem', sm: '1.25rem' } }}>
           TechFlix <span className="text-primary-main">Admin</span>
         </Typography>
 
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.5, sm: 2 } }}>
           <IconButton color="inherit" onClick={handleToggleTheme}>
             {mode === 'dark' ? <LightModeIcon /> : <DarkModeIcon />}
           </IconButton>
@@ -88,7 +89,7 @@ export const Header: React.FC<HeaderProps> = ({ open, toggleDrawer }) => {
                 {user?.role === 'admin' ? 'Administrator' : 'Manager'}
               </Typography>
             </Box>
-            <Avatar alt={user?.name} src={user?.avatar} sx={{ width: 36, height: 36 }} />
+            <Avatar alt={user?.name} src={user?.avatar} sx={{ width: { xs: 32, sm: 36 }, height: { xs: 32, sm: 36 } }} />
           </Box>
         </Box>
       </Toolbar>

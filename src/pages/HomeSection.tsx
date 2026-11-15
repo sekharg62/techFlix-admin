@@ -614,7 +614,7 @@ export const HomeSection: React.FC = () => {
   );
 
   return (
-    <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1600, mx: 'auto' }}>
+    <Box sx={{ maxWidth: 1600, mx: 'auto' }}>
       {/* Page Header */}
       <Box
         sx={{
@@ -860,7 +860,7 @@ export const HomeSection: React.FC = () => {
             </IconButton>
           </DialogTitle>
 
-          <DialogContent sx={{ p: 3, pt: 1 }}>
+          <DialogContent sx={{ p: { xs: 2, sm: 3 }, pt: 1 }}>
             {formError && (
               <Alert severity="error" sx={{ mb: 2.5, borderRadius: '10px' }} onClose={() => setFormError('')}>
                 {formError}
@@ -985,7 +985,7 @@ export const HomeSection: React.FC = () => {
             </Stack>
           </DialogContent>
 
-          <DialogActions sx={{ p: 3, pt: 1, gap: 1 }}>
+          <DialogActions sx={{ p: { xs: 2, sm: 3 }, pt: 1, gap: 1 }}>
             <Button
               onClick={handleCloseModal}
               disabled={saving}
@@ -1073,7 +1073,7 @@ export const HomeSection: React.FC = () => {
           </IconButton>
         </DialogTitle>
 
-        <DialogContent sx={{ p: 3, pt: 1 }}>
+        <DialogContent sx={{ p: { xs: 2, sm: 3 }, pt: 1 }}>
           {/* Quick Add Product Card */}
           <Paper
             elevation={0}
@@ -1262,7 +1262,7 @@ export const HomeSection: React.FC = () => {
           )}
         </DialogContent>
 
-        <DialogActions sx={{ p: 3, pt: 1 }}>
+        <DialogActions sx={{ p: { xs: 2, sm: 3 }, pt: 1 }}>
           <Button
             onClick={() => setManageProductsModalOpen(false)}
             variant="contained"

@@ -446,8 +446,8 @@ export const HeroSlides: React.FC = () => {
         <DialogTitle
           sx={{
             m: 0,
-            p: 2.5,
-            px: 3,
+            p: { xs: 2, sm: 2.5 },
+            px: { xs: 2, sm: 3 },
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -477,7 +477,7 @@ export const HeroSlides: React.FC = () => {
         </DialogTitle>
 
         <form onSubmit={handleSubmitForm}>
-          <DialogContent sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+          <DialogContent sx={{ p: { xs: 2, sm: 3 }, display: 'flex', flexDirection: 'column', gap: 2.5 }}>
             {formError && (
               <Alert severity="error" sx={{ borderRadius: '10px' }}>
                 {formError}
@@ -606,7 +606,7 @@ export const HeroSlides: React.FC = () => {
 
           <DialogActions
             sx={{
-              p: 3,
+              p: { xs: 2, sm: 3 },
               pt: 2,
               borderTop: `1px solid ${isDarkMode ? alpha('#ffffff', 0.08) : alpha('#000000', 0.08)}`,
             }}

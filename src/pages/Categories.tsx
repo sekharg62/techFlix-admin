@@ -454,20 +454,21 @@ export const Categories: React.FC = () => {
       <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' },
+          gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' },
           gap: 2,
         }}
       >
         <Paper
           elevation={0}
           sx={{
-            p: 2.5,
+            p: { xs: 1.5, sm: 2.5 },
             borderRadius: '16px',
             backgroundColor: isDarkMode ? '#131318' : '#ffffff',
             border: `1px solid ${isDarkMode ? alpha('#ffffff', 0.08) : alpha('#000000', 0.08)}`,
             display: 'flex',
             alignItems: 'center',
-            gap: 2,
+            gap: { xs: 1.25, sm: 2 },
+            minWidth: 0,
           }}
         >
           <Avatar
@@ -481,8 +482,8 @@ export const Categories: React.FC = () => {
           >
             <LayersIcon />
           </Avatar>
-          <Box>
-            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase' }}>
+          <Box sx={{ minWidth: 0 }}>
+            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase', fontSize: { xs: '0.7rem', sm: undefined }, lineHeight: 1.3, display: 'block' }}>
               Total Categories
             </Typography>
             <Typography variant="h5" sx={{ fontWeight: 700 }}>
@@ -494,13 +495,14 @@ export const Categories: React.FC = () => {
         <Paper
           elevation={0}
           sx={{
-            p: 2.5,
+            p: { xs: 1.5, sm: 2.5 },
             borderRadius: '16px',
             backgroundColor: isDarkMode ? '#131318' : '#ffffff',
             border: `1px solid ${isDarkMode ? alpha('#ffffff', 0.08) : alpha('#000000', 0.08)}`,
             display: 'flex',
             alignItems: 'center',
-            gap: 2,
+            gap: { xs: 1.25, sm: 2 },
+            minWidth: 0,
           }}
         >
           <Avatar
@@ -514,8 +516,8 @@ export const Categories: React.FC = () => {
           >
             <TagIcon />
           </Avatar>
-          <Box>
-            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase' }}>
+          <Box sx={{ minWidth: 0 }}>
+            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase', fontSize: { xs: '0.7rem', sm: undefined }, lineHeight: 1.3, display: 'block' }}>
               Active Slugs
             </Typography>
             <Typography variant="h5" sx={{ fontWeight: 700 }}>
@@ -527,13 +529,14 @@ export const Categories: React.FC = () => {
         <Paper
           elevation={0}
           sx={{
-            p: 2.5,
+            p: { xs: 1.5, sm: 2.5 },
             borderRadius: '16px',
             backgroundColor: isDarkMode ? '#131318' : '#ffffff',
             border: `1px solid ${isDarkMode ? alpha('#ffffff', 0.08) : alpha('#000000', 0.08)}`,
             display: 'flex',
             alignItems: 'center',
-            gap: 2,
+            gap: { xs: 1.25, sm: 2 },
+            minWidth: 0,
           }}
         >
           <Avatar
@@ -547,8 +550,8 @@ export const Categories: React.FC = () => {
           >
             <ScheduleIcon />
           </Avatar>
-          <Box>
-            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase' }}>
+          <Box sx={{ minWidth: 0 }}>
+            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase', fontSize: { xs: '0.7rem', sm: undefined }, lineHeight: 1.3, display: 'block' }}>
               Latest Added
             </Typography>
             <Typography variant="body1" noWrap sx={{ fontWeight: 700, maxWidth: 180 }}>
@@ -588,8 +591,8 @@ export const Categories: React.FC = () => {
         <DialogTitle
           sx={{
             m: 0,
-            p: 2.5,
-            px: 3,
+            p: { xs: 2, sm: 2.5 },
+            px: { xs: 2, sm: 3 },
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -619,7 +622,7 @@ export const Categories: React.FC = () => {
         </DialogTitle>
 
         <form onSubmit={handleSubmitForm}>
-          <DialogContent sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+          <DialogContent sx={{ p: { xs: 2, sm: 3 }, display: 'flex', flexDirection: 'column', gap: 2.5 }}>
             {formError && (
               <Alert severity="error" sx={{ borderRadius: '10px' }}>
                 {formError}
@@ -668,7 +671,7 @@ export const Categories: React.FC = () => {
 
           <DialogActions
             sx={{
-              p: 3,
+              p: { xs: 2, sm: 3 },
               pt: 2,
               borderTop: `1px solid ${isDarkMode ? alpha('#ffffff', 0.08) : alpha('#000000', 0.08)}`,
             }}
