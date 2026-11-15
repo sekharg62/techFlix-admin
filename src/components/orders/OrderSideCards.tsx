@@ -91,11 +91,16 @@ const ContactRow: React.FC<{ icon: React.ReactNode; copy?: string; children: Rea
   </Box>
 );
 
+/** Payout charge is stored inside `total` (total = subtotal − discount + charge); 0 for older orders. */
+const payoutCharge = (order: OrderDetail) =>
+  Math.max(0, Math.round((Number(order.total) - Number(order.subtotal) + Number(order.discount)) * 100) / 100);
+
 export const OrderSummaryCard: React.FC<{ order: OrderDetail }> = ({ order }) => (
   <SectionCard title="Summary" icon={<SummaryIcon fontSize="small" />}>
     <Stack spacing={1}>
       <SummaryRow label="Subtotal" value={formatBDT(order.subtotal)} />
       {Number(order.discount) > 0 && <SummaryRow label="Discount" value={`− ${formatBDT(order.discount)}`} />}
+      {payoutCharge(order) > 0 && <SummaryRow label="Payout charge (2%)" value={formatBDT(payoutCharge(order))} />}
       <Divider />
       <SummaryRow label="Total" value={formatBDT(order.total)} strong />
       <Divider />
