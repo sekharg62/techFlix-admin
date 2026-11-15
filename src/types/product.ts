@@ -7,6 +7,21 @@ export interface ProductPlan {
   price: number;
   durationDays?: number;
   validity?: string;
+  inStock?: boolean;
+  /** Server: id of the variant this plan belongs to (null = no variant). */
+  variantId?: string | null;
+  /** Admin form only: local key of the variant draft this plan belongs to. */
+  variantKey?: string;
+}
+
+/** A group of plans inside a product, e.g. "Mobile", "Desktop / TV". */
+export interface ProductVariant {
+  id?: string;
+  name: string;
+  description?: string | null;
+  inStock?: boolean;
+  sortOrder?: number;
+  plans?: ProductPlan[];
 }
 
 export interface ProductCategoryRef {
@@ -25,6 +40,7 @@ export interface Product {
   stock: boolean;
   type?: string[];
   plans?: ProductPlan[];
+  variants?: ProductVariant[];
   longDesc?: string | null;
   features?: string[];
   createdAt?: string;
@@ -76,6 +92,7 @@ export interface CreateProductPayload {
   stock?: boolean;
   type?: string[];
   plans?: ProductPlan[];
+  variants?: ProductVariant[];
   longDesc?: string;
   features?: string[];
 }
@@ -88,6 +105,7 @@ export interface UpdateProductPayload {
   stock?: boolean;
   type?: string[];
   plans?: ProductPlan[];
+  variants?: ProductVariant[];
   longDesc?: string;
   features?: string[];
 }

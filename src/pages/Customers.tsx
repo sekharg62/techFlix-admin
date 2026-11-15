@@ -48,7 +48,7 @@ import { CopyButton } from '../components/common/CopyButton';
 import { dataGridSx } from '../components/common/dataGridSx';
 import { OrderStatusChip } from '../components/orders/StatusChips';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
-import { formatBDT, formatDate, fromNow } from '../utils/orderFormat';
+import { formatBDT, formatDate, fromNow, itemPlanLabel } from '../utils/orderFormat';
 
 export const Customers: React.FC = () => {
   const theme = useTheme();
@@ -370,7 +370,7 @@ const CustomerDrawer: React.FC<{
                         {o.orderNumber}
                       </Typography>
                       <Typography variant="caption" component="div" sx={{ color: 'text.secondary' }} noWrap>
-                        {o.items.map((i) => `${i.productName} (${i.planName})`).join(', ')}
+                        {o.items.map((i) => `${i.productName} (${itemPlanLabel(i)})`).join(', ')}
                       </Typography>
                       <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                         {formatDate(o.createdAt)}

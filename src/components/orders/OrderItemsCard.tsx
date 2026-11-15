@@ -27,7 +27,7 @@ import {
 import type { OrderDetail, OrderItem } from '../../types/order';
 import { SectionCard } from '../common/SectionCard';
 import { CopyButton } from '../common/CopyButton';
-import { formatBDT, formatDateTime } from '../../utils/orderFormat';
+import { formatBDT, formatDateTime, itemPlanLabel } from '../../utils/orderFormat';
 
 interface OrderItemsCardProps {
   order: OrderDetail;
@@ -107,7 +107,7 @@ const ItemRow: React.FC<{ item: OrderItem; canDeliver: boolean; blockedReason: s
                 {item.productName}
               </Typography>
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                {item.planName}
+                {itemPlanLabel(item)}
                 {item.planValidity ? ` · ${item.planValidity}` : ''}
               </Typography>
             </Box>
@@ -219,7 +219,7 @@ const DeliverItemDialog: React.FC<{
       <DialogContent>
         {item && (
           <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
-            {item.productName} — {item.planName} × {item.quantity}
+            {item.productName} — {itemPlanLabel(item)} × {item.quantity}
           </Typography>
         )}
         <TextField

@@ -29,6 +29,7 @@ export interface OrderItem {
   productName: string;
   productSlug: string;
   productImgUrl: string | null;
+  variantName?: string | null;
   planName: string;
   planDurationDays: number | null;
   planValidity: string | null;
@@ -85,7 +86,7 @@ export interface OrderSummary {
   updatedAt: string;
   deliveredAt: string | null;
   cancelledAt: string | null;
-  items: Pick<OrderItem, 'id' | 'productName' | 'planName' | 'quantity' | 'deliveredAt'>[];
+  items: Pick<OrderItem, 'id' | 'productName' | 'variantName' | 'planName' | 'quantity' | 'deliveredAt'>[];
   payments: Pick<Payment, 'id' | 'method' | 'trxId' | 'senderNumber' | 'status'>[];
 }
 
@@ -136,7 +137,7 @@ export interface PaymentWithOrder extends Payment {
 
 export interface CustomerDetail extends Customer {
   orders: (Omit<OrderSummary, 'items' | 'payments'> & {
-    items: Pick<OrderItem, 'productName' | 'planName' | 'quantity'>[];
+    items: Pick<OrderItem, 'productName' | 'variantName' | 'planName' | 'quantity'>[];
   })[];
 }
 

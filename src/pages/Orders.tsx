@@ -55,6 +55,7 @@ import {
   PAYMENT_METHOD_META,
   PAYMENT_STATUS_META,
   formatBDT,
+  itemPlanLabel,
   formatDateTime,
   fromNow,
 } from '../utils/orderFormat';
@@ -196,7 +197,7 @@ export const Orders: React.FC = () => {
           return (
             <Box sx={{ lineHeight: 1.3, minWidth: 0 }}>
               <Typography variant="body2" noWrap>
-                {first ? `${first.productName} · ${first.planName}` : '—'}
+                {first ? `${first.productName} · ${itemPlanLabel(first)}` : '—'}
               </Typography>
               <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                 {row.items.length > 1 ? `+${row.items.length - 1} more · ` : ''}

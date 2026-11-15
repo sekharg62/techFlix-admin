@@ -55,7 +55,26 @@ import { CustomDataTable } from '../components/common/CustomDataTable';
 import { productService } from '../services/productService';
 import { categoryService } from '../services/categoryService';
 import { imgUploadService } from '../services/imgUploadService';
-import type { Product, ProductPlan } from '../types/product';
+import type { Product, ProductPlan, ProductVariant } from '../types/product';
+
+/** Variant being edited in the product form (plans reference it by `key`). */
+interface VariantDraft {
+  key: string;
+  id?: string;
+  name: string;
+  description: string;
+  inStock: boolean;
+}
+
+let draftKeySeq = 0;
+const newDraftKey = () => `draft-${Date.now()}-${++draftKeySeq}`;
+
+/** "Mobile · 1 Month" when the plan belongs to a variant, otherwise just "1 Month". */
+const planLabel = (plan: ProductPlan, variants?: ProductVariant[]) => {
+  const variant = plan.variantId ? variants?.find((v) => v.id === plan.variantId) : undefined;
+  const name = plan.title || plan.name || 'Plan';
+  return variant ? `${variant.name} · ${name}` : name;
+};
 import type { Category } from '../types/category';
 import { formatBDT } from '../utils/orderFormat';
 
@@ -100,6 +119,10 @@ export const Products: React.FC = () => {
   const [features, setFeatures] = useState<string[]>([]);
   const [featureInput, setFeatureInput] = useState('');
   const [plans, setPlans] = useState<ProductPlan[]>([]);
+  const [variants, setVariants] = useState<VariantDraft[]>([]);
+  const [variantName, setVariantName] = useState('');
+  const [variantDesc, setVariantDesc] = useState('');
+  const [planVariantKey, setPlanVariantKey] = useState('');
   const [formError, setFormError] = useState('');
 
   // New Plan Input State
@@ -174,6 +197,10 @@ export const Products: React.FC = () => {
       { title: '3 Months', price: 499, validity: '90 days', durationDays: 90 },
       { title: 'Annual Plan', price: 999, validity: '365 days', durationDays: 365 },
     ]);
+    setVariants([]);
+    setVariantName('');
+    setVariantDesc('');
+    setPlanVariantKey('');
     setPlanTitle('');
     setPlanPrice('');
     setPlanValidity('');
@@ -196,18 +223,33 @@ export const Products: React.FC = () => {
     setTypeInput('');
     setFeatures(Array.isArray(prod.features) ? prod.features : []);
     setFeatureInput('');
-    setPlans(
-      Array.isArray(prod.plans)
-        ? prod.plans.map((p) => ({
-          id: p.id,
-          title: p.title || p.name || 'Standard Plan',
-          name: p.name || p.title || 'Standard Plan',
-          price: p.price,
-          validity: p.validity || (p.durationDays ? `${p.durationDays} days` : ''),
-          durationDays: p.durationDays,
-        }))
-        : []
+    const toDraftPlan = (p: ProductPlan, variantKey?: string): ProductPlan => ({
+      id: p.id,
+      title: p.title || p.name || 'Standard Plan',
+      name: p.name || p.title || 'Standard Plan',
+      price: Number(p.price),
+      validity: p.validity || (p.durationDays ? `${p.durationDays} days` : ''),
+      durationDays: p.durationDays ?? undefined,
+      inStock: p.inStock,
+      variantKey,
+    });
+    const prodVariants = Array.isArray(prod.variants) ? prod.variants : [];
+    setVariants(
+      prodVariants.map((v) => ({
+        key: v.id || newDraftKey(),
+        id: v.id,
+        name: v.name,
+        description: v.description || '',
+        inStock: v.inStock !== false,
+      }))
     );
+    setPlans([
+      ...(Array.isArray(prod.plans) ? prod.plans.filter((p) => !p.variantId).map((p) => toDraftPlan(p)) : []),
+      ...prodVariants.flatMap((v) => (v.plans || []).map((p) => toDraftPlan(p, v.id))),
+    ]);
+    setVariantName('');
+    setVariantDesc('');
+    setPlanVariantKey(prodVariants[0]?.id || '');
     setPlanTitle('');
     setPlanPrice('');
     setPlanValidity('');
@@ -295,7 +337,44 @@ export const Products: React.FC = () => {
   };
 
   // Plan Management (Listing Type Plans)
+  const handleAddVariant = () => {
+    const nameTrim = variantName.trim();
+    if (!nameTrim) {
+      toast.error('Variant name is required (e.g. Mobile, Desktop / TV)');
+      return;
+    }
+    if (variants.some((v) => v.name.trim().toLowerCase() === nameTrim.toLowerCase())) {
+      toast.error(`Variant "${nameTrim}" already exists`);
+      return;
+    }
+    const draft: VariantDraft = { key: newDraftKey(), name: nameTrim, description: variantDesc.trim(), inStock: true };
+    setVariants([...variants, draft]);
+    // First variant: move any existing simple plans into it so nothing is left behind.
+    if (variants.length === 0 && plans.some((p) => !p.variantKey)) {
+      setPlans(plans.map((p) => (p.variantKey ? p : { ...p, variantKey: draft.key })));
+    }
+    setPlanVariantKey(draft.key);
+    setVariantName('');
+    setVariantDesc('');
+    toast.success(`Variant "${nameTrim}" added. Now add its plans.`);
+  };
+
+  const handleUpdateVariant = (key: string, patch: Partial<VariantDraft>) => {
+    setVariants(variants.map((v) => (v.key === key ? { ...v, ...patch } : v)));
+  };
+
+  const handleRemoveVariant = (key: string) => {
+    const remaining = variants.filter((v) => v.key !== key);
+    setVariants(remaining);
+    setPlans(plans.filter((p) => p.variantKey !== key));
+    if (planVariantKey === key) setPlanVariantKey(remaining[0]?.key || '');
+  };
+
   const handleAddPlan = () => {
+    if (variants.length > 0 && !variants.some((v) => v.key === planVariantKey)) {
+      toast.error('Choose which variant this plan belongs to');
+      return;
+    }
     if (!planTitle.trim()) {
       toast.error('Plan title is required (e.g. 1 Month, Annual Plan)');
       return;
@@ -313,6 +392,7 @@ export const Products: React.FC = () => {
       price: numPrice,
       validity: planValidity.trim() || (durationNum ? `${durationNum} days` : undefined),
       durationDays: durationNum,
+      variantKey: variants.length > 0 ? planVariantKey : undefined,
     };
 
     setPlans([...plans, newPlan]);
@@ -343,8 +423,35 @@ export const Products: React.FC = () => {
       return;
     }
 
+    const emptyVariant = variants.find((v) => !v.name.trim() || !plans.some((p) => p.variantKey === v.key));
+    if (emptyVariant) {
+      const msg = emptyVariant.name.trim()
+        ? `Variant "${emptyVariant.name}" has no plans. Add a plan to it or remove the variant.`
+        : 'Every variant needs a name.';
+      setFormError(msg);
+      toast.error(msg);
+      setActiveTab(1);
+      return;
+    }
+    if (plans.length === 0) {
+      setFormError('Add at least one plan.');
+      toast.error('Add at least one plan.');
+      setActiveTab(1);
+      return;
+    }
+
     setSaving(true);
     setFormError('');
+
+    const toPlanPayload = (p: ProductPlan) => ({
+      id: p.id,
+      title: p.title || p.name,
+      name: p.name || p.title,
+      price: Number(p.price),
+      durationDays: p.durationDays ? Number(p.durationDays) : undefined,
+      validity: p.validity,
+      inStock: p.inStock,
+    });
 
     const payload = {
       name: name.trim(),
@@ -355,13 +462,13 @@ export const Products: React.FC = () => {
       stock,
       type: types,
       features,
-      plans: plans.map((p) => ({
-        id: p.id,
-        title: p.title || p.name,
-        name: p.name || p.title,
-        price: Number(p.price),
-        durationDays: p.durationDays ? Number(p.durationDays) : undefined,
-        validity: p.validity,
+      plans: plans.filter((p) => !p.variantKey).map(toPlanPayload),
+      variants: variants.map((v) => ({
+        id: v.id,
+        name: v.name.trim(),
+        description: v.description.trim() || null,
+        inStock: v.inStock,
+        plans: plans.filter((p) => p.variantKey === v.key).map(toPlanPayload),
       })),
     };
 
@@ -546,7 +653,7 @@ export const Products: React.FC = () => {
               {planList.slice(0, 2).map((plan, idx) => (
                 <Chip
                   key={idx}
-                  label={`${plan.title || plan.name || 'Plan'}: ${formatBDT(plan.price)}`}
+                  label={`${planLabel(plan, params.row.variants)}: ${formatBDT(plan.price)}`}
                   size="small"
                   variant="outlined"
                   sx={{
@@ -559,7 +666,7 @@ export const Products: React.FC = () => {
                 />
               ))}
               {planList.length > 2 && (
-                <Tooltip title={planList.map((p) => `${p.title || p.name}: ${formatBDT(p.price)} (${p.validity || ''})`).join('\n')}>
+                <Tooltip title={planList.map((p) => `${planLabel(p, params.row.variants)}: ${formatBDT(p.price)} (${p.validity || ''})`).join('\n')}>
                   <Chip
                     label={`+${planList.length - 2}`}
                     size="small"
@@ -1260,6 +1367,61 @@ export const Products: React.FC = () => {
             {/* TAB 1: Subscription Plans */}
             {activeTab === 1 && (
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+                {/* Variants (optional): e.g. Mobile / Desktop, each with its own plans */}
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 2.5,
+                    borderRadius: '14px',
+                    backgroundColor: isDarkMode ? alpha('#ffffff', 0.03) : alpha('#000000', 0.02),
+                    border: `1px solid ${isDarkMode ? alpha('#ffffff', 0.1) : alpha('#000000', 0.1)}`,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 1.5,
+                  }}
+                >
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <CategoryIcon sx={{ color: 'primary.main', fontSize: 20 }} />
+                    Variants (optional)
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Use variants when the product comes in different types, e.g. <b>Mobile</b> and <b>Desktop / TV</b>, each with its own
+                    1 / 3 / 12-month plans. Leave empty for a simple product.
+                  </Typography>
+                  <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1.5fr auto' }, gap: 1.5, alignItems: 'center' }}>
+                    <TextField
+                      label="Variant name *"
+                      placeholder="e.g. Mobile"
+                      size="small"
+                      value={variantName}
+                      onChange={(e) => setVariantName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddVariant();
+                        }
+                      }}
+                    />
+                    <TextField
+                      label="Short description"
+                      placeholder="e.g. 1 phone · 480p"
+                      size="small"
+                      value={variantDesc}
+                      onChange={(e) => setVariantDesc(e.target.value)}
+                    />
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      size="small"
+                      startIcon={<AddIcon />}
+                      onClick={handleAddVariant}
+                      sx={{ borderRadius: '4px', fontWeight: 700, px: 2, height: 40 }}
+                    >
+                      Add Variant
+                    </Button>
+                  </Box>
+                </Paper>
+
                 {/* Plan Creation Form */}
                 <Paper
                   elevation={0}
@@ -1277,6 +1439,22 @@ export const Products: React.FC = () => {
                     <LoyaltyIcon sx={{ color: 'primary.main', fontSize: 20 }} />
                     Add New Subscription Plan
                   </Typography>
+
+                  {variants.length > 0 && (
+                    <TextField
+                      select
+                      label="Add to variant *"
+                      size="small"
+                      value={variants.some((v) => v.key === planVariantKey) ? planVariantKey : ''}
+                      onChange={(e) => setPlanVariantKey(e.target.value)}
+                    >
+                      {variants.map((v) => (
+                        <MenuItem key={v.key} value={v.key}>
+                          {v.name || '(unnamed variant)'}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  )}
 
                   <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1.5fr 1fr 1fr 1fr' }, gap: 1.5 }}>
                     <TextField
@@ -1318,84 +1496,152 @@ export const Products: React.FC = () => {
                       size="small"
                       startIcon={<AddIcon />}
                       onClick={handleAddPlan}
-                      sx={{ borderRadius: '8px', fontWeight: 700, px: 2 }}
+                      sx={{ borderRadius: '4px', fontWeight: 700, px: 2 }}
                     >
-                      Add Plan to Product
+                      {variants.length > 0
+                        ? `Add Plan to ${variants.find((v) => v.key === planVariantKey)?.name || 'Variant'}`
+                        : 'Add Plan to Product'}
                     </Button>
                   </Box>
                 </Paper>
 
-                {/* Configured Plans List */}
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-                    Configured Plans ({plans.length})
-                  </Typography>
-
-                  {plans.length === 0 ? (
-                    <Box
+                {/* Configured Plans List (grouped by variant) */}
+                {(() => {
+                  const renderPlanCard = (plan: ProductPlan, idx: number) => (
+                    <Paper
+                      key={idx}
+                      elevation={0}
                       sx={{
-                        p: 4,
-                        textAlign: 'center',
+                        p: 2,
                         borderRadius: '12px',
-                        border: `1px dashed ${isDarkMode ? alpha('#ffffff', 0.15) : alpha('#000000', 0.15)}`,
-                        color: 'text.secondary',
+                        backgroundColor: isDarkMode ? '#181822' : '#f8f9fc',
+                        border: `1px solid ${isDarkMode ? alpha('#ffffff', 0.1) : alpha('#000000', 0.1)}`,
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
                       }}
                     >
-                      <LoyaltyIcon sx={{ fontSize: 40, opacity: 0.3, mb: 1 }} />
-                      <Typography variant="body2">No subscription plans added yet.</Typography>
-                      <Typography variant="caption">Use the form above to add pricing tiers (e.g. 1 Month, 3 Months, 1 Year).</Typography>
-                    </Box>
-                  ) : (
-                    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' }, gap: 1.5 }}>
-                      {plans.map((plan, idx) => (
-                        <Paper
-                          key={idx}
-                          elevation={0}
+                      <Box>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'text.primary' }}>
+                          {plan.title || plan.name}
+                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+                          <Chip label={formatBDT(plan.price)} size="small" color="primary" sx={{ fontWeight: 800, height: 22 }} />
+                          {(plan.validity || plan.durationDays) && (
+                            <Typography variant="caption" color="text.secondary">
+                              {plan.validity || `${plan.durationDays} days`}
+                            </Typography>
+                          )}
+                        </Box>
+                      </Box>
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={() => handleRemovePlan(idx)}
+                        sx={{ borderRadius: '4px', '&:hover': { backgroundColor: alpha(theme.palette.error.main, 0.12) } }}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Paper>
+                  );
+                  const indexed = plans.map((plan, idx) => ({ plan, idx }));
+                  const simplePlans = indexed.filter(({ plan }) => !plan.variantKey);
+                  const gridSx = { display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' }, gap: 1.5 };
+
+                  return (
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                        Configured Plans ({plans.length}
+                        {variants.length > 0 ? ` in ${variants.length} variant${variants.length === 1 ? '' : 's'}` : ''})
+                      </Typography>
+
+                      {plans.length === 0 && variants.length === 0 && (
+                        <Box
                           sx={{
-                            p: 2,
+                            p: 4,
+                            textAlign: 'center',
                             borderRadius: '12px',
-                            backgroundColor: isDarkMode ? '#181822' : '#f8f9fc',
-                            border: `1px solid ${isDarkMode ? alpha('#ffffff', 0.1) : alpha('#000000', 0.1)}`,
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
+                            border: `1px dashed ${isDarkMode ? alpha('#ffffff', 0.15) : alpha('#000000', 0.15)}`,
+                            color: 'text.secondary',
                           }}
                         >
-                          <Box>
-                            <Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'text.primary' }}>
-                              {plan.title || plan.name}
-                            </Typography>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
-                              <Chip
-                                label={formatBDT(plan.price)}
-                                size="small"
-                                color="primary"
-                                sx={{ fontWeight: 800, height: 22 }}
-                              />
-                              {(plan.validity || plan.durationDays) && (
-                                <Typography variant="caption" color="text.secondary">
-                                  {plan.validity || `${plan.durationDays} days`}
-                                </Typography>
-                              )}
-                            </Box>
-                          </Box>
-                          <IconButton
-                            size="small"
-                            color="error"
-                            onClick={() => handleRemovePlan(idx)}
+                          <LoyaltyIcon sx={{ fontSize: 40, opacity: 0.3, mb: 1 }} />
+                          <Typography variant="body2">No subscription plans added yet.</Typography>
+                          <Typography variant="caption">Use the form above to add pricing tiers (e.g. 1 Month, 3 Months, 1 Year).</Typography>
+                        </Box>
+                      )}
+
+                      {variants.map((v) => {
+                        const variantPlans = indexed.filter(({ plan }) => plan.variantKey === v.key);
+                        return (
+                          <Paper
+                            key={v.key}
+                            elevation={0}
                             sx={{
-                              '&:hover': {
-                                backgroundColor: alpha(theme.palette.error.main, 0.12),
-                              },
+                              p: 2,
+                              borderRadius: '14px',
+                              border: `1px solid ${alpha(theme.palette.primary.main, 0.35)}`,
+                              backgroundColor: isDarkMode ? alpha(theme.palette.primary.main, 0.05) : alpha(theme.palette.primary.main, 0.03),
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: 1.5,
+                              opacity: v.inStock ? 1 : 0.7,
                             }}
                           >
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
-                        </Paper>
-                      ))}
+                            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1.5fr auto auto' }, gap: 1.5, alignItems: 'center' }}>
+                              <TextField
+                                label="Variant name"
+                                size="small"
+                                value={v.name}
+                                onChange={(e) => handleUpdateVariant(v.key, { name: e.target.value })}
+                              />
+                              <TextField
+                                label="Short description"
+                                size="small"
+                                value={v.description}
+                                onChange={(e) => handleUpdateVariant(v.key, { description: e.target.value })}
+                              />
+                              <FormControlLabel
+                                sx={{ m: 0 }}
+                                control={
+                                  <Switch
+                                    size="small"
+                                    checked={v.inStock}
+                                    onChange={(e) => handleUpdateVariant(v.key, { inStock: e.target.checked })}
+                                  />
+                                }
+                                label={<Typography variant="caption" sx={{ fontWeight: 700 }}>{v.inStock ? 'In stock' : 'Out of stock'}</Typography>}
+                              />
+                              <Tooltip title="Remove variant and its plans">
+                                <IconButton size="small" color="error" onClick={() => handleRemoveVariant(v.key)} sx={{ borderRadius: '4px' }}>
+                                  <DeleteIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                            </Box>
+                            {variantPlans.length === 0 ? (
+                              <Typography variant="caption" color="warning.main" sx={{ fontWeight: 600 }}>
+                                No plans yet. Choose "{v.name || 'this variant'}" above and add its 1 / 3 / 12-month plans.
+                              </Typography>
+                            ) : (
+                              <Box sx={gridSx}>{variantPlans.map(({ plan, idx }) => renderPlanCard(plan, idx))}</Box>
+                            )}
+                          </Paper>
+                        );
+                      })}
+
+                      {simplePlans.length > 0 && (
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                          {variants.length > 0 && (
+                            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
+                              Plans without a variant
+                            </Typography>
+                          )}
+                          <Box sx={gridSx}>{simplePlans.map(({ plan, idx }) => renderPlanCard(plan, idx))}</Box>
+                        </Box>
+                      )}
                     </Box>
-                  )}
-                </Box>
+                  );
+                })()}
               </Box>
             )}
 
@@ -1659,7 +1905,7 @@ export const Products: React.FC = () => {
                       }}
                     >
                       <Typography variant="body2" sx={{ fontWeight: 700 }}>
-                        {plan.title || plan.name}
+                        {planLabel(plan, previewProduct.variants)}
                       </Typography>
                       <Typography variant="h6" color="primary.main" sx={{ fontWeight: 800 }}>
                         {formatBDT(plan.price)}

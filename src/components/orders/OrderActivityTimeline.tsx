@@ -3,7 +3,7 @@ import { Box, Typography, alpha, useTheme } from '@mui/material';
 import { History as HistoryIcon } from '@mui/icons-material';
 import type { OrderDetail } from '../../types/order';
 import { SectionCard } from '../common/SectionCard';
-import { ORDER_STATUS_META, PAYMENT_METHOD_META, formatBDT, formatDateTime } from '../../utils/orderFormat';
+import { ORDER_STATUS_META, PAYMENT_METHOD_META, formatBDT, formatDateTime, itemPlanLabel } from '../../utils/orderFormat';
 
 type Tone = 'warning' | 'info' | 'success' | 'error' | 'grey';
 
@@ -68,7 +68,7 @@ export const OrderActivityTimeline: React.FC<{ order: OrderDetail }> = ({ order 
           id: `d-${i.id}`,
           at: i.deliveredAt,
           title: 'Item delivered',
-          detail: `${i.productName} — ${i.planName}`,
+          detail: `${i.productName} — ${itemPlanLabel(i)}`,
           tone: 'success',
         });
       }

@@ -64,3 +64,7 @@ export const nextStatuses = (status: OrderStatus, paymentStatus: PaymentStatus):
 };
 
 export const ORDER_FLOW: OrderStatus[] = ['PENDING', 'PROCESSING', 'DELIVERED'];
+
+/** "Mobile · 3 Months" when the item was bought from a product variant, otherwise just the plan name. */
+export const itemPlanLabel = (item: { variantName?: string | null; planName: string }) =>
+  item.variantName ? `${item.variantName} · ${item.planName}` : item.planName;
