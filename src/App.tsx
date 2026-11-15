@@ -17,6 +17,7 @@ import { Orders } from './pages/Orders';
 import { OrderDetails } from './pages/OrderDetails';
 import { Customers } from './pages/Customers';
 import { PaymentSettings } from './pages/PaymentSettings';
+import { SubscriptionAlerts } from './pages/SubscriptionAlerts';
 
 // Protected route wrapper component: checks if user exists and has a valid token
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -79,6 +80,7 @@ function App() {
               <Route path="categories" element={<Categories />} />
               <Route path="orders" element={<Orders />} />
               <Route path="orders/:id" element={<OrderDetails />} />
+              <Route path="subscription-alerts" element={<SubscriptionAlerts />} />
               <Route path="customers" element={<Customers />} />
               <Route path="reviews" element={<Reviews />} />
               <Route path="hero-slides" element={<HeroSlides />} />

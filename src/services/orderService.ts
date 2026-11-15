@@ -1,5 +1,8 @@
 import { apiClient } from './apiClient';
 import type {
+  AlertBucket,
+  AlertSummary,
+  SubscriptionAlert,
   Customer,
   CustomerDetail,
   DashboardAnalytics,
@@ -128,5 +131,21 @@ export const dashboardService = {
   recentOrders: async () => {
     const res = await apiClient.get<Envelope<{ recentOrders: RecentOrder[] }>>('/dashboard/stats');
     return res.data.data.recentOrders;
+  },
+};
+
+export const subscriptionAlertService = {
+  /** Counts per bucket — one indexed query on the server. */
+  summary: async () => {
+    const res = await apiClient.get<Envelope<AlertSummary>>('/subscription-alerts/summary');
+    return res.data.data;
+  },
+
+  list: async (params: { bucket: AlertBucket; page?: number; limit?: number; search?: string }) => {
+    const res = await apiClient.get<{ success: boolean; data: SubscriptionAlert[]; pagination: Pagination }>(
+      '/subscription-alerts',
+      { params: clean(params) }
+    );
+    return res.data;
   },
 };

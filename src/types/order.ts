@@ -193,3 +193,23 @@ export interface RecentOrder {
   paymentStatus: PaymentStatus;
   createdAt: string;
 }
+
+/** Subscription alerts: delivered items whose plan ends soon (GET /subscription-alerts). */
+export type AlertBucket = 'expired' | '1' | '3' | '5' | '7' | '15' | '30';
+
+export type AlertSummary = Record<AlertBucket, number>;
+
+export interface SubscriptionAlert {
+  id: string;
+  productName: string;
+  productSlug: string;
+  variantName: string | null;
+  planName: string;
+  planDurationDays: number | null;
+  quantity: number;
+  deliveredAt: string | null;
+  expiresAt: string | null;
+  /** Whole days left (rounded up); 0 or negative = expired. */
+  daysLeft: number | null;
+  order: { id: string; orderNumber: string; customerName: string; customerEmail: string; customerPhone: string };
+}

@@ -24,7 +24,8 @@ import {
   RateReview as RateReviewIcon,
   ViewCarousel as ViewCarouselIcon,
   Category as CategoryIcon,
-  Web as WebIcon
+  Web as WebIcon,
+  NotificationsActive as AlertsIcon,
 } from '@mui/icons-material';
 import { Link, useLocation } from 'react-router-dom';
 import { useUser } from '../../context/UserContext';
@@ -41,6 +42,7 @@ const menuItems = [
   { text: 'Products', icon: <InventoryIcon />, path: '/dashboard/products' },
   { text: 'Categories', icon: <CategoryIcon />, path: '/dashboard/categories' },
   { text: 'Orders', icon: <ShoppingCartIcon />, path: '/dashboard/orders' },
+  { text: 'Subscription Alerts', icon: <AlertsIcon />, path: '/dashboard/subscription-alerts' },
   { text: 'Customers', icon: <PeopleIcon />, path: '/dashboard/customers' },
   { text: 'Reviews', icon: <RateReviewIcon />, path: '/dashboard/reviews' },
   { text: 'Hero Slides', icon: <ViewCarouselIcon />, path: '/dashboard/hero-slides' },
