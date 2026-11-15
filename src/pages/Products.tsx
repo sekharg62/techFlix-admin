@@ -401,7 +401,7 @@ export const Products: React.FC = () => {
     try {
       await productService.deleteProduct(productToDelete.id);
       setProducts((prev) => prev.filter((item) => item.id !== productToDelete.id));
-      toast.success(`Product "${productToDelete.name}" deleted successfully!`, { icon: '🗑️' });
+      toast.success(`Product "${productToDelete.name}" deleted successfully!`, { icon: () => '🗑️' });
       setDeleteDialogOpen(false);
       setProductToDelete(null);
     } catch (error: any) {
@@ -963,7 +963,7 @@ export const Products: React.FC = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
               variant="standard"
               fullWidth
-              InputProps={{ disableUnderline: true }}
+              slotProps={{ input: { disableUnderline: true } }}
               sx={{ input: { fontSize: '0.95rem', py: 0.75 } }}
             />
             {searchTerm && (
@@ -1007,7 +1007,7 @@ export const Products: React.FC = () => {
         onClose={handleCloseModal}
         fullWidth
         maxWidth="md"
-        PaperProps={{
+        slotProps={{ paper: {
           sx: {
             borderRadius: '20px',
             backgroundColor: isDarkMode ? '#16161d' : '#ffffff',
@@ -1015,7 +1015,7 @@ export const Products: React.FC = () => {
             border: `1px solid ${isDarkMode ? alpha('#ffffff', 0.1) : alpha('#000000', 0.1)}`,
             boxShadow: isDarkMode ? '0 24px 48px rgba(0,0,0,0.6)' : '0 20px 40px rgba(0,0,0,0.15)',
           },
-        }}
+        } }}
       >
         <DialogTitle
           sx={{
@@ -1570,14 +1570,14 @@ export const Products: React.FC = () => {
         onClose={() => setPreviewOpen(false)}
         fullWidth
         maxWidth="sm"
-        PaperProps={{
+        slotProps={{ paper: {
           sx: {
             borderRadius: '20px',
             backgroundColor: isDarkMode ? '#16161d' : '#ffffff',
             backgroundImage: 'none',
             border: `1px solid ${isDarkMode ? alpha('#ffffff', 0.1) : alpha('#000000', 0.1)}`,
           },
-        }}
+        } }}
       >
         <DialogTitle
           sx={{
@@ -1698,13 +1698,13 @@ export const Products: React.FC = () => {
       <Dialog
         open={deleteDialogOpen}
         onClose={() => !deleting && setDeleteDialogOpen(false)}
-        PaperProps={{
+        slotProps={{ paper: {
           sx: {
             borderRadius: '16px',
             p: 1,
             backgroundColor: isDarkMode ? '#16161d' : '#ffffff',
           },
-        }}
+        } }}
       >
         <DialogTitle sx={{ fontWeight: 700, color: 'text.primary' }}>
           Delete Product?

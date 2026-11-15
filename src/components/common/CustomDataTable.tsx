@@ -53,7 +53,7 @@ const CustomNoRowsOverlay = () => (
     }}
   >
     <SearchOffIcon sx={{ fontSize: 52, opacity: 0.35, color: 'primary.main' }} />
-    <Typography variant="h6" fontWeight={600} color="text.primary">
+    <Typography variant="h6" color="text.primary" sx={{ fontWeight: 600 }}>
       No matching records found
     </Typography>
     <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 320, textAlign: 'center' }}>
@@ -90,7 +90,7 @@ const CustomGridToolbar = () => {
       <GridToolbarColumnsButton />
       <GridToolbarFilterButton />
       <GridToolbarDensitySelector />
-      <GridToolbarExport slotProps={{ button: { variant: 'text' } }} />
+      <GridToolbarExport />
     </GridToolbarContainer>
   );
 };
@@ -166,7 +166,7 @@ export const CustomDataTable: React.FC<CustomDataTableProps> = ({
         {/* Title & Count Badge */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           {title && (
-            <Typography variant="h6" fontWeight={700} sx={{ letterSpacing: '-0.01em' }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, letterSpacing: '-0.01em' }}>
               {title}
             </Typography>
           )}

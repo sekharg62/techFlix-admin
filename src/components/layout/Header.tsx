@@ -32,7 +32,7 @@ export const Header: React.FC<HeaderProps> = ({ open, toggleDrawer }) => {
   const handleToggleTheme = () => {
     toggleTheme();
     toast.success(`Switched to ${mode === 'dark' ? 'Light' : 'Dark'} mode`, {
-      icon: mode === 'dark' ? '☀️' : '🌙',
+      icon: () => (mode === 'dark' ? '☀️' : '🌙'),
     });
   };
 

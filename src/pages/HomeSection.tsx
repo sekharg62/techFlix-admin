@@ -39,7 +39,6 @@ import {
   ContentCopy as ContentCopyIcon,
   LocalOffer as LocalOfferIcon,
   Layers as LayersIcon,
-  Schedule as ScheduleIcon,
   TrendingUp as TrendingUpIcon,
   ViewAgenda as ViewAgendaIcon,
   Inventory as InventoryIcon,
@@ -691,7 +690,7 @@ export const HomeSection: React.FC = () => {
 
       {/* Overview Stat Cards */}
       <Grid container spacing={2.5} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={4}>
+        <Grid size={{ xs: 12, sm: 4 }}>
           <Paper
             elevation={0}
             sx={{
@@ -726,7 +725,7 @@ export const HomeSection: React.FC = () => {
           </Paper>
         </Grid>
 
-        <Grid item xs={12} sm={4}>
+        <Grid size={{ xs: 12, sm: 4 }}>
           <Paper
             elevation={0}
             sx={{
@@ -761,7 +760,7 @@ export const HomeSection: React.FC = () => {
           </Paper>
         </Grid>
 
-        <Grid item xs={12} sm={4}>
+        <Grid size={{ xs: 12, sm: 4 }}>
           <Paper
             elevation={0}
             sx={{
@@ -815,7 +814,7 @@ export const HomeSection: React.FC = () => {
         onClose={handleCloseModal}
         fullWidth
         maxWidth="md"
-        PaperProps={{
+        slotProps={{ paper: {
           sx: {
             borderRadius: '20px',
             backgroundColor: isDarkMode ? '#1e293b' : '#ffffff',
@@ -823,7 +822,7 @@ export const HomeSection: React.FC = () => {
             border: `1px solid ${isDarkMode ? alpha('#ffffff', 0.1) : alpha('#000000', 0.08)}`,
             boxShadow: isDarkMode ? '0 25px 50px -12px rgba(0, 0, 0, 0.7)' : '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
           },
-        }}
+        } }}
       >
         <form onSubmit={handleSubmit}>
           <DialogTitle
@@ -969,10 +968,10 @@ export const HomeSection: React.FC = () => {
                       </Box>
                     </li>
                   )}
-                  renderTags={(tagValue, getTagProps) =>
+                  renderValue={(tagValue, getItemProps) =>
                     tagValue.map((option, index) => (
                       <Chip
-                        {...getTagProps({ index })}
+                        {...getItemProps({ index })}
                         key={option.id}
                         avatar={<Avatar src={option.imgUrl || ''}>{option.name[0]}</Avatar>}
                         label={option.name}
@@ -1029,14 +1028,14 @@ export const HomeSection: React.FC = () => {
         onClose={() => setManageProductsModalOpen(false)}
         fullWidth
         maxWidth="md"
-        PaperProps={{
+        slotProps={{ paper: {
           sx: {
             borderRadius: '20px',
             backgroundColor: isDarkMode ? '#1e293b' : '#ffffff',
             backgroundImage: 'none',
             border: `1px solid ${isDarkMode ? alpha('#ffffff', 0.1) : alpha('#000000', 0.08)}`,
           },
-        }}
+        } }}
       >
         <DialogTitle
           sx={{
@@ -1278,13 +1277,13 @@ export const HomeSection: React.FC = () => {
       <Dialog
         open={deleteDialogOpen}
         onClose={() => !deleting && setDeleteDialogOpen(false)}
-        PaperProps={{
+        slotProps={{ paper: {
           sx: {
             borderRadius: '16px',
             p: 1,
             backgroundColor: isDarkMode ? '#1e293b' : '#ffffff',
           },
-        }}
+        } }}
       >
         <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1.5, color: 'error.main' }}>
           <DeleteIcon />

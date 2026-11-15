@@ -190,7 +190,7 @@ export const Categories: React.FC = () => {
     try {
       await categoryService.deleteCategory(categoryToDelete.id);
       setCategories((prev) => prev.filter((item) => item.id !== categoryToDelete.id));
-      toast.success(`Category "${categoryToDelete.name}" deleted successfully!`, { icon: '🗑️' });
+      toast.success(`Category "${categoryToDelete.name}" deleted successfully!`, { icon: () => '🗑️' });
       setDeleteDialogOpen(false);
       setCategoryToDelete(null);
     } catch (error: any) {
@@ -264,7 +264,7 @@ export const Categories: React.FC = () => {
               <FolderIcon fontSize="small" />
             </Avatar>
             <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-              <Typography variant="body2" fontWeight={700} color="text.primary">
+              <Typography variant="body2" color="text.primary" sx={{ fontWeight: 700 }}>
                 {params.value}
               </Typography>
             </Box>
@@ -404,7 +404,7 @@ export const Categories: React.FC = () => {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <CategoryIcon sx={{ fontSize: 38, color: 'primary.main' }} />
           <Box>
-            <Typography variant="h4" fontWeight="700" sx={{ letterSpacing: '-0.02em' }}>
+            <Typography variant="h4" sx={{ fontWeight: '700', letterSpacing: '-0.02em' }}>
               Categories
             </Typography>
             <Typography variant="body2" color="text.secondary">
@@ -482,10 +482,10 @@ export const Categories: React.FC = () => {
             <LayersIcon />
           </Avatar>
           <Box>
-            <Typography variant="caption" color="text.secondary" fontWeight={600} textTransform="uppercase">
+            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase' }}>
               Total Categories
             </Typography>
-            <Typography variant="h5" fontWeight={700}>
+            <Typography variant="h5" sx={{ fontWeight: 700 }}>
               {categories.length}
             </Typography>
           </Box>
@@ -515,10 +515,10 @@ export const Categories: React.FC = () => {
             <TagIcon />
           </Avatar>
           <Box>
-            <Typography variant="caption" color="text.secondary" fontWeight={600} textTransform="uppercase">
+            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase' }}>
               Active Slugs
             </Typography>
-            <Typography variant="h5" fontWeight={700}>
+            <Typography variant="h5" sx={{ fontWeight: 700 }}>
               {categories.filter((c) => !!c.slug).length}
             </Typography>
           </Box>
@@ -548,10 +548,10 @@ export const Categories: React.FC = () => {
             <ScheduleIcon />
           </Avatar>
           <Box>
-            <Typography variant="caption" color="text.secondary" fontWeight={600} textTransform="uppercase">
+            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase' }}>
               Latest Added
             </Typography>
-            <Typography variant="body1" fontWeight={700} noWrap sx={{ maxWidth: 180 }}>
+            <Typography variant="body1" noWrap sx={{ fontWeight: 700, maxWidth: 180 }}>
               {categories.length > 0 ? categories[0].name : 'None'}
             </Typography>
           </Box>
@@ -575,7 +575,7 @@ export const Categories: React.FC = () => {
         onClose={handleCloseModal}
         fullWidth
         maxWidth="sm"
-        PaperProps={{
+        slotProps={{ paper: {
           sx: {
             borderRadius: '20px',
             backgroundColor: isDarkMode ? '#16161d' : '#ffffff',
@@ -583,7 +583,7 @@ export const Categories: React.FC = () => {
             border: `1px solid ${isDarkMode ? alpha('#ffffff', 0.1) : alpha('#000000', 0.1)}`,
             boxShadow: isDarkMode ? '0 24px 48px rgba(0,0,0,0.6)' : '0 20px 40px rgba(0,0,0,0.15)',
           },
-        }}
+        } }}
       >
         <DialogTitle
           sx={{
@@ -598,7 +598,7 @@ export const Categories: React.FC = () => {
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <CategoryIcon sx={{ color: 'primary.main' }} />
-            <Typography variant="h6" fontWeight={700} color="text.primary">
+            <Typography variant="h6" color="text.primary" sx={{ fontWeight: 700 }}>
               {editingCategory ? 'Edit Category' : 'Create New Category'}
             </Typography>
           </Box>
@@ -700,15 +700,15 @@ export const Categories: React.FC = () => {
       <Dialog
         open={deleteDialogOpen}
         onClose={() => !deleting && setDeleteDialogOpen(false)}
-        PaperProps={{
+        slotProps={{ paper: {
           sx: {
             borderRadius: '16px',
             p: 1,
             backgroundColor: isDarkMode ? '#16161d' : '#ffffff',
           },
-        }}
+        } }}
       >
-        <DialogTitle fontWeight={700} sx={{ color: 'text.primary' }}>
+        <DialogTitle sx={{ fontWeight: 700, color: 'text.primary' }}>
           Delete Category?
         </DialogTitle>
         <DialogContent>

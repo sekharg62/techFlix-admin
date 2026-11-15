@@ -371,7 +371,7 @@ export const HeroSlides: React.FC = () => {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <ViewCarouselIcon sx={{ fontSize: 36, color: 'primary.main' }} />
           <Box>
-            <Typography variant="h4" fontWeight="700" sx={{ letterSpacing: '-0.02em' }}>
+            <Typography variant="h4" sx={{ fontWeight: '700', letterSpacing: '-0.02em' }}>
               Hero Slides
             </Typography>
             <Typography variant="body2" color="text.secondary">
@@ -433,7 +433,7 @@ export const HeroSlides: React.FC = () => {
         onClose={handleCloseModal}
         fullWidth
         maxWidth="sm"
-        PaperProps={{
+        slotProps={{ paper: {
           sx: {
             borderRadius: '20px',
             backgroundColor: isDarkMode ? '#16161d' : '#ffffff',
@@ -441,7 +441,7 @@ export const HeroSlides: React.FC = () => {
             border: `1px solid ${isDarkMode ? alpha('#ffffff', 0.1) : alpha('#000000', 0.1)}`,
             boxShadow: isDarkMode ? '0 24px 48px rgba(0,0,0,0.6)' : '0 20px 40px rgba(0,0,0,0.15)',
           },
-        }}
+        } }}
       >
         <DialogTitle
           sx={{
@@ -456,7 +456,7 @@ export const HeroSlides: React.FC = () => {
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <ViewCarouselIcon sx={{ color: 'primary.main' }} />
-            <Typography variant="h6" fontWeight={700} color="text.primary">
+            <Typography variant="h6" color="text.primary" sx={{ fontWeight: 700 }}>
               {editingSlide ? 'Edit Slide' : 'Create New Slide'}
             </Typography>
           </Box>
@@ -508,7 +508,7 @@ export const HeroSlides: React.FC = () => {
                 border: `1px dashed ${isDarkMode ? alpha('#ffffff', 0.18) : alpha('#000000', 0.18)}`,
               }}
             >
-              <Typography variant="subtitle2" fontWeight={600}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
                 Slide Banner Image *
               </Typography>
 
@@ -638,15 +638,15 @@ export const HeroSlides: React.FC = () => {
       <Dialog
         open={deleteDialogOpen}
         onClose={() => !deleting && setDeleteDialogOpen(false)}
-        PaperProps={{
+        slotProps={{ paper: {
           sx: {
             borderRadius: '16px',
             p: 1,
             backgroundColor: isDarkMode ? '#16161d' : '#ffffff',
           },
-        }}
+        } }}
       >
-        <DialogTitle fontWeight={700} sx={{ color: 'text.primary' }}>
+        <DialogTitle sx={{ fontWeight: 700, color: 'text.primary' }}>
           Delete Hero Slide?
         </DialogTitle>
         <DialogContent>

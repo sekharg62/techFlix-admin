@@ -309,7 +309,7 @@ export const Reviews: React.FC = () => {
                 {params.value ? params.value.charAt(0).toUpperCase() : 'U'}
               </Avatar>
               <Box sx={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                <Typography variant="body2" fontWeight={600} color="text.primary" noWrap>
+                <Typography variant="body2" color="text.primary" noWrap sx={{ fontWeight: 600 }}>
                   {params.value || 'Anonymous'}
                 </Typography>
                 {row.role && (
@@ -340,7 +340,7 @@ export const Reviews: React.FC = () => {
                 size="small"
                 emptyIcon={<StarIcon style={{ opacity: 0.3 }} fontSize="inherit" />}
               />
-              <Typography variant="caption" fontWeight={700} color="text.secondary">
+              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
                 {stars}
               </Typography>
             </Box>
@@ -405,7 +405,7 @@ export const Reviews: React.FC = () => {
         width: 130,
         renderCell: (params) => (
           <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
-            <Typography variant="caption" color="text.secondary" fontWeight={500}>
+            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
               {formatDate(params.value)}
             </Typography>
           </Box>
@@ -469,7 +469,7 @@ export const Reviews: React.FC = () => {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <RateReviewIcon sx={{ fontSize: 36, color: 'primary.main' }} />
           <Box>
-            <Typography variant="h4" fontWeight="700" sx={{ letterSpacing: '-0.02em' }}>
+            <Typography variant="h4" sx={{ fontWeight: '700', letterSpacing: '-0.02em' }}>
               Customer Reviews
             </Typography>
             <Typography variant="body2" color="text.secondary">
@@ -531,7 +531,7 @@ export const Reviews: React.FC = () => {
         onClose={handleCloseModal}
         fullWidth
         maxWidth="sm"
-        PaperProps={{
+        slotProps={{ paper: {
           sx: {
             borderRadius: '20px',
             backgroundColor: isDarkMode ? '#16161d' : '#ffffff',
@@ -539,7 +539,7 @@ export const Reviews: React.FC = () => {
             border: `1px solid ${isDarkMode ? alpha('#ffffff', 0.1) : alpha('#000000', 0.1)}`,
             boxShadow: isDarkMode ? '0 24px 48px rgba(0,0,0,0.6)' : '0 20px 40px rgba(0,0,0,0.15)',
           },
-        }}
+        } }}
       >
         <DialogTitle
           sx={{
@@ -554,7 +554,7 @@ export const Reviews: React.FC = () => {
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <RateReviewIcon sx={{ color: 'primary.main' }} />
-            <Typography variant="h6" fontWeight={700} color="text.primary">
+            <Typography variant="h6" color="text.primary" sx={{ fontWeight: 700 }}>
               {editingReview ? 'Edit Review' : 'Create New Review'}
             </Typography>
           </Box>
@@ -619,7 +619,7 @@ export const Reviews: React.FC = () => {
               </Box>
 
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, flex: 1 }}>
-                <Typography variant="subtitle2" fontWeight={600}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
                   Reviewer Avatar (Optional)
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
@@ -719,7 +719,7 @@ export const Reviews: React.FC = () => {
               }}
             >
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="body2" fontWeight={600} color="text.secondary">
+                <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }}>
                   Star Rating (0 - 5)
                 </Typography>
                 <Chip
@@ -802,15 +802,15 @@ export const Reviews: React.FC = () => {
       <Dialog
         open={deleteDialogOpen}
         onClose={() => !deleting && setDeleteDialogOpen(false)}
-        PaperProps={{
+        slotProps={{ paper: {
           sx: {
             borderRadius: '16px',
             p: 1,
             backgroundColor: isDarkMode ? '#16161d' : '#ffffff',
           },
-        }}
+        } }}
       >
-        <DialogTitle fontWeight={700} sx={{ color: 'text.primary' }}>
+        <DialogTitle sx={{ fontWeight: 700, color: 'text.primary' }}>
           Delete Review?
         </DialogTitle>
         <DialogContent>
