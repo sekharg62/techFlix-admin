@@ -57,6 +57,7 @@ import { categoryService } from '../services/categoryService';
 import { imgUploadService } from '../services/imgUploadService';
 import type { Product, ProductPlan } from '../types/product';
 import type { Category } from '../types/category';
+import { formatBDT } from '../utils/orderFormat';
 
 export const Products: React.FC = () => {
   const theme = useTheme();
@@ -545,7 +546,7 @@ export const Products: React.FC = () => {
               {planList.slice(0, 2).map((plan, idx) => (
                 <Chip
                   key={idx}
-                  label={`${plan.title || plan.name || 'Plan'}: ₹${plan.price}`}
+                  label={`${plan.title || plan.name || 'Plan'}: ${formatBDT(plan.price)}`}
                   size="small"
                   variant="outlined"
                   sx={{
@@ -558,7 +559,7 @@ export const Products: React.FC = () => {
                 />
               ))}
               {planList.length > 2 && (
-                <Tooltip title={planList.map((p) => `${p.title || p.name}: ₹${p.price} (${p.validity || ''})`).join('\n')}>
+                <Tooltip title={planList.map((p) => `${p.title || p.name}: ${formatBDT(p.price)} (${p.validity || ''})`).join('\n')}>
                   <Chip
                     label={`+${planList.length - 2}`}
                     size="small"
@@ -1286,7 +1287,7 @@ export const Products: React.FC = () => {
                       onChange={(e) => setPlanTitle(e.target.value)}
                     />
                     <TextField
-                      label="Price (₹ / $) *"
+                      label="Price (৳ BDT) *"
                       placeholder="199"
                       type="number"
                       size="small"
@@ -1366,7 +1367,7 @@ export const Products: React.FC = () => {
                             </Typography>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
                               <Chip
-                                label={`₹${plan.price}`}
+                                label={formatBDT(plan.price)}
                                 size="small"
                                 color="primary"
                                 sx={{ fontWeight: 800, height: 22 }}
@@ -1661,7 +1662,7 @@ export const Products: React.FC = () => {
                         {plan.title || plan.name}
                       </Typography>
                       <Typography variant="h6" color="primary.main" sx={{ fontWeight: 800 }}>
-                        ₹{plan.price}
+                        {formatBDT(plan.price)}
                       </Typography>
                       {(plan.validity || plan.durationDays) && (
                         <Typography variant="caption" color="text.secondary">
