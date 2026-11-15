@@ -284,7 +284,7 @@ export const RecentOrdersCard: React.FC<{ orders?: RecentOrder[]; loading?: bool
                 <Typography variant="body2" sx={{ fontWeight: 700 }} noWrap>
                   {o.customerName}
                 </Typography>
-                <Typography variant="caption" sx={{ color: 'text.secondary', fontFamily: 'monospace' }}>
+                <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                   {o.orderNumber} · {fromNow(o.createdAt)}
                 </Typography>
               </Box>

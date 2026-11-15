@@ -267,11 +267,11 @@ export const Reviews: React.FC = () => {
             <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
               <Typography
                 variant="body2"
-                fontWeight={700}
                 sx={{
-                  fontFamily: 'monospace',
+                  fontFamily: 'inherit',
+                  fontWeight: 600,
                   color: 'primary.main',
-                  fontSize: '0.75rem',
+                  fontSize: '0.875rem',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap',
@@ -302,7 +302,7 @@ export const Reviews: React.FC = () => {
                   bgcolor: alpha(theme.palette.primary.main, 0.2),
                   color: theme.palette.primary.main,
                   fontWeight: 700,
-                  fontSize: '0.875rem',
+                  fontSize: '0.85rem',
                   border: `1.5px solid ${alpha(theme.palette.primary.main, 0.35)}`,
                 }}
               >
@@ -361,7 +361,7 @@ export const Reviews: React.FC = () => {
                 sx={{
                   fontWeight: 600,
                   borderRadius: '8px',
-                  fontSize: '0.75rem',
+                  fontSize: '0.82rem',
                   borderColor: isDarkMode ? alpha('#ffffff', 0.2) : alpha('#000000', 0.15),
                   backgroundColor: isDarkMode ? alpha('#ffffff', 0.04) : alpha('#000000', 0.02),
                 }}
@@ -427,7 +427,7 @@ export const Reviews: React.FC = () => {
                 onClick={() => handleOpenEdit(params.row as Review)}
                 sx={{
                   color: 'text.secondary',
-                  borderRadius: '8px',
+                  borderRadius: '4px',
                   p: 0.75,
                   '&:hover': {
                     color: 'primary.main',
@@ -444,7 +444,7 @@ export const Reviews: React.FC = () => {
                 onClick={() => handleOpenDelete(params.row as Review)}
                 sx={{
                   color: 'text.secondary',
-                  borderRadius: '8px',
+                  borderRadius: '4px',
                   p: 0.75,
                   '&:hover': {
                     color: 'error.main',
@@ -726,7 +726,7 @@ export const Reviews: React.FC = () => {
                   label={`${starCount} / 5 Stars`}
                   size="small"
                   color="primary"
-                  sx={{ fontWeight: 700, fontSize: '0.75rem' }}
+                  sx={{ fontWeight: 700, fontSize: '0.82rem' }}
                 />
               </Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
@@ -747,7 +747,7 @@ export const Reviews: React.FC = () => {
                   variant="text"
                   color="inherit"
                   onClick={() => setStarCount(0)}
-                  sx={{ fontSize: '0.75rem', textTransform: 'none', color: 'text.secondary' }}
+                  sx={{ fontSize: '0.85rem', textTransform: 'none', color: 'text.secondary' }}
                 >
                   Set 0
                 </Button>

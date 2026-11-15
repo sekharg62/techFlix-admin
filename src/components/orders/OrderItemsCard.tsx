@@ -167,8 +167,8 @@ const ItemRow: React.FC<{ item: OrderItem; canDeliver: boolean; blockedReason: s
                 component="pre"
                 sx={{
                   m: 0,
+                  fontFamily: 'inherit',
                   flexGrow: 1,
-                  fontFamily: 'monospace',
                   whiteSpace: 'pre-wrap',
                   wordBreak: 'break-all',
                   filter: revealed ? 'none' : 'blur(5px)',
@@ -232,7 +232,7 @@ const DeliverItemDialog: React.FC<{
           value={details}
           onChange={(e) => setDetails(e.target.value)}
           helperText="Only admins can see this. The order is marked Delivered automatically once every item has a key."
-          slotProps={{ htmlInput: { style: { fontFamily: 'monospace' } } }}
+         
         />
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2.5 }}>

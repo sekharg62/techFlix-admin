@@ -49,6 +49,11 @@ export const CustomThemeProvider: React.FC<{ children: React.ReactNode }> = ({ c
         },
         typography: {
           fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+          fontSize: 15,
+          body1: { fontSize: '1rem' },
+          body2: { fontSize: '0.92rem', lineHeight: 1.5 },
+          caption: { fontSize: '0.8rem' },
+          subtitle2: { fontSize: '0.92rem' },
         },
         components: {
           MuiButton: {

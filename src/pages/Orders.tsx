@@ -158,7 +158,7 @@ export const Orders: React.FC = () => {
         sortable: false,
         renderCell: ({ row }) => (
           <Box sx={{ lineHeight: 1.3 }}>
-            <Typography variant="body2" sx={{ fontWeight: 800, fontFamily: 'monospace' }}>
+            <Typography variant="body2" sx={{ fontWeight: 600 }}>
               {row.orderNumber}
             </Typography>
             <Typography variant="caption" sx={{ color: 'text.secondary' }} title={formatDateTime(row.createdAt)}>

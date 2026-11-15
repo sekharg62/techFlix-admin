@@ -366,7 +366,7 @@ const CustomerDrawer: React.FC<{
                     sx={{ px: 1, py: 1.25, borderBottom: 1, borderColor: 'divider', gap: 1.5 }}
                   >
                     <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-                      <Typography variant="body2" sx={{ fontWeight: 700, fontFamily: 'monospace' }}>
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
                         {o.orderNumber}
                       </Typography>
                       <Typography variant="caption" component="div" sx={{ color: 'text.secondary' }} noWrap>

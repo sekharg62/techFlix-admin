@@ -240,11 +240,11 @@ export const HeroSlides: React.FC = () => {
             <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
               <Typography
                 variant="body2"
-                fontWeight={700}
                 sx={{
-                  fontFamily: 'monospace',
+                  fontFamily: 'inherit',
+                  fontWeight: 600,
                   color: 'primary.main',
-                  fontSize: '0.75rem',
+                  fontSize: '0.875rem',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap',
@@ -270,7 +270,7 @@ export const HeroSlides: React.FC = () => {
             size="small"
             sx={{
               fontWeight: 800,
-              fontSize: '0.85rem',
+              fontSize: '0.82rem',
               backgroundColor: alpha(theme.palette.primary.main, 0.15),
               color: theme.palette.primary.main,
               border: `1px solid ${alpha(theme.palette.primary.main, 0.3)}`,
@@ -329,7 +329,7 @@ export const HeroSlides: React.FC = () => {
                 onClick={() => handleOpenEdit(params.row as HeroSlide)}
                 sx={{
                   color: 'text.secondary',
-                  borderRadius: '8px',
+                  borderRadius: '4px',
                   p: 0.85,
                   '&:hover': {
                     color: 'primary.main',
@@ -346,7 +346,7 @@ export const HeroSlides: React.FC = () => {
                 onClick={() => handleOpenDelete(params.row as HeroSlide)}
                 sx={{
                   color: 'text.secondary',
-                  borderRadius: '8px',
+                  borderRadius: '4px',
                   p: 0.85,
                   '&:hover': {
                     color: 'error.main',

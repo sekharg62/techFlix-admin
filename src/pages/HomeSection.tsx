@@ -397,8 +397,9 @@ export const HomeSection: React.FC = () => {
                   alignItems: 'center',
                   gap: 0.5,
                   cursor: 'pointer',
-                  fontFamily: 'monospace',
-                  fontSize: '0.75rem',
+                  fontFamily: 'inherit',
+                  fontWeight: 600,
+                  fontSize: '0.875rem',
                   color: 'text.secondary',
                   '&:hover': { color: 'primary.main' },
                 }}
@@ -444,12 +445,12 @@ export const HomeSection: React.FC = () => {
           const tagStyle = getTagColor(params.value);
           return (
             <Chip
-              icon={<LocalOfferIcon sx={{ fontSize: '14px !important', color: `${tagStyle.text} !important` }} />}
+              icon={<LocalOfferIcon sx={{ fontSize: '15px !important', color: `${tagStyle.text} !important` }} />}
               label={params.value || 'None'}
               size="small"
               sx={{
                 fontWeight: 600,
-                fontSize: '0.75rem',
+                fontSize: '0.82rem',
                 backgroundColor: tagStyle.bg,
                 border: `1px solid ${tagStyle.border}`,
                 color: tagStyle.text,
@@ -479,9 +480,9 @@ export const HomeSection: React.FC = () => {
                   startIcon={<ShoppingBagIcon sx={{ fontSize: 16 }} />}
                   onClick={() => handleOpenManageProducts(section)}
                   sx={{
-                    borderRadius: '8px',
+                    borderRadius: '4px',
                     textTransform: 'none',
-                    fontSize: '0.75rem',
+                    fontSize: '0.85rem',
                     fontWeight: 600,
                     py: 0.4,
                     px: 1.2,
@@ -498,7 +499,7 @@ export const HomeSection: React.FC = () => {
               </Tooltip>
 
               {count > 0 && (
-                <AvatarGroup max={3} sx={{ '& .MuiAvatar-root': { width: 26, height: 26, fontSize: '0.7rem' } }}>
+                <AvatarGroup max={3} sx={{ '& .MuiAvatar-root': { width: 26, height: 26, fontSize: '0.8rem' } }}>
                   {prods.map((sp) => (
                     <Tooltip key={sp.productId} title={sp.product?.name || 'Product'} arrow>
                       <Avatar
@@ -906,7 +907,7 @@ export const HomeSection: React.FC = () => {
                       onClick={() => setTag(suggestedTag)}
                       variant={tag === suggestedTag ? 'filled' : 'outlined'}
                       color={tag === suggestedTag ? 'primary' : 'default'}
-                      sx={{ fontSize: '0.7rem', height: '22px' }}
+                      sx={{ fontSize: '0.75rem', height: '22px' }}
                     />
                   ))}
                 </Box>
@@ -1203,7 +1204,7 @@ export const HomeSection: React.FC = () => {
                                 <Chip
                                   label={typeof prod.category === 'object' ? prod.category.name : prod.category}
                                   size="small"
-                                  sx={{ fontSize: '0.68rem', height: '20px' }}
+                                  sx={{ fontSize: '0.72rem', height: '20px' }}
                                 />
                               )}
                               {prod?.stock !== undefined && (
@@ -1212,7 +1213,7 @@ export const HomeSection: React.FC = () => {
                                   size="small"
                                   color={prod.stock ? 'success' : 'default'}
                                   variant="outlined"
-                                  sx={{ fontSize: '0.68rem', height: '20px' }}
+                                  sx={{ fontSize: '0.72rem', height: '20px' }}
                                 />
                               )}
                             </Box>

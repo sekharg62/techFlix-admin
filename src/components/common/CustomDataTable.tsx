@@ -75,9 +75,9 @@ const CustomGridToolbar = () => {
         borderBottom: `1px solid ${isDarkMode ? alpha('#ffffff', 0.04) : alpha('#000000', 0.04)}`,
         '& .MuiButton-root': {
           color: 'text.secondary',
-          fontSize: '0.8125rem',
+          fontSize: '0.875rem',
           fontWeight: 600,
-          borderRadius: '8px',
+          borderRadius: '4px',
           padding: '4px 10px',
           textTransform: 'none',
           '&:hover': {
@@ -180,7 +180,7 @@ export const CustomDataTable: React.FC<CustomDataTableProps> = ({
             size="small"
             sx={{
               fontWeight: 600,
-              fontSize: '0.75rem',
+              fontSize: '0.8rem',
               backgroundColor: isDarkMode ? alpha(theme.palette.primary.main, 0.15) : alpha(theme.palette.primary.main, 0.08),
               color: theme.palette.primary.main,
               border: `1px solid ${alpha(theme.palette.primary.main, 0.25)}`,
@@ -247,7 +247,7 @@ export const CustomDataTable: React.FC<CustomDataTableProps> = ({
               onChange={handleSearchChange}
               fullWidth
               sx={{
-                fontSize: '0.875rem',
+                fontSize: '0.95rem',
                 fontWeight: 500,
                 color: 'text.primary',
                 '& input::placeholder': {
@@ -282,7 +282,7 @@ export const CustomDataTable: React.FC<CustomDataTableProps> = ({
                 sx={{
                   height: 42,
                   width: 42,
-                  borderRadius: '12px',
+                  borderRadius: '6px',
                   border: `1px solid ${isDarkMode ? alpha('#ffffff', 0.1) : alpha('#000000', 0.1)}`,
                   backgroundColor: isDarkMode ? alpha('#ffffff', 0.03) : alpha('#000000', 0.02),
                   '&:hover': {
@@ -326,7 +326,7 @@ export const CustomDataTable: React.FC<CustomDataTableProps> = ({
               display: 'flex !important',
               alignItems: 'center !important',
               borderBottom: `1px solid ${isDarkMode ? alpha('#ffffff', 0.05) : alpha('#000000', 0.05)}`,
-              fontSize: '0.875rem',
+              fontSize: '0.95rem',
               color: 'text.primary',
               '&:focus, &:focus-within': {
                 outline: 'none !important',
@@ -340,7 +340,7 @@ export const CustomDataTable: React.FC<CustomDataTableProps> = ({
             },
             '& .MuiDataGrid-columnHeaderTitle': {
               fontWeight: 700,
-              fontSize: '0.78rem',
+              fontSize: '0.82rem',
               letterSpacing: '0.04em',
               textTransform: 'uppercase',
               color: 'text.secondary',

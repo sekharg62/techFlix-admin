@@ -36,8 +36,8 @@ export const VerifyPaymentDialog: React.FC<VerifyPaymentDialogProps> = ({
       {payment && (
         <Stack spacing={1.25}>
           <Row label="Method" value={PAYMENT_METHOD_META[payment.method].label} />
-          <Row label="Transaction ID" value={payment.trxId} mono />
-          <Row label="Sender number" value={payment.senderNumber} mono />
+          <Row label="Transaction ID" value={payment.trxId} />
+          <Row label="Sender number" value={payment.senderNumber} />
           <Row label="Amount" value={formatBDT(payment.amount)} />
           {mismatch && (
             <Alert severity="warning" sx={{ borderRadius: '10px' }}>
@@ -50,12 +50,12 @@ export const VerifyPaymentDialog: React.FC<VerifyPaymentDialogProps> = ({
   );
 };
 
-const Row: React.FC<{ label: string; value: string; mono?: boolean }> = ({ label, value, mono }) => (
+const Row: React.FC<{ label: string; value: string }> = ({ label, value }) => (
   <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2 }}>
     <Typography variant="body2" sx={{ color: 'text.secondary' }}>
       {label}
     </Typography>
-    <Typography variant="body2" sx={{ fontWeight: 700, fontFamily: mono ? 'monospace' : undefined }}>
+    <Typography variant="body2" sx={{ fontWeight: 700 }}>
       {value}
     </Typography>
   </Box>

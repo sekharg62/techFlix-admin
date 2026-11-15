@@ -228,12 +228,11 @@ export const Categories: React.FC = () => {
               >
                 <Typography
                   variant="body2"
-                  fontWeight={700}
                   sx={{
-                    fontFamily: 'monospace',
+                    fontFamily: 'inherit',
+                    fontWeight: 600,
                     color: 'primary.main',
-                    fontSize: '0.75rem',
-                    letterSpacing: '0.02em',
+                    fontSize: '0.875rem',
                   }}
                 >
                   {val ? `${val.substring(0, 8)}...` : '—'}
@@ -282,13 +281,12 @@ export const Categories: React.FC = () => {
             <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
               <Tooltip title="Click to copy slug" arrow>
                 <Chip
-                  icon={<TagIcon sx={{ fontSize: '13px !important' }} />}
+                  icon={<TagIcon sx={{ fontSize: '15px !important' }} />}
                   label={val || '—'}
                   size="small"
                   onClick={() => handleCopyText(val, 'Slug')}
                   sx={{
-                    fontFamily: 'monospace',
-                    fontSize: '0.75rem',
+                    fontSize: '0.82rem',
                     fontWeight: 600,
                     borderRadius: '8px',
                     cursor: 'pointer',
@@ -342,7 +340,7 @@ export const Categories: React.FC = () => {
           const date = params.value ? dayjs(params.value).format('MMM D, YYYY · HH:mm') : '—';
           return (
             <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
-              <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
+              <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
                 {date}
               </Typography>
             </Box>
@@ -364,7 +362,7 @@ export const Categories: React.FC = () => {
                 onClick={() => handleOpenEdit(params.row as Category)}
                 sx={{
                   color: 'text.secondary',
-                  borderRadius: '8px',
+                  borderRadius: '4px',
                   p: 0.75,
                   '&:hover': {
                     color: 'primary.main',
@@ -381,7 +379,7 @@ export const Categories: React.FC = () => {
                 onClick={() => handleOpenDelete(params.row as Category)}
                 sx={{
                   color: 'text.secondary',
-                  borderRadius: '8px',
+                  borderRadius: '4px',
                   p: 0.75,
                   '&:hover': {
                     color: 'error.main',
@@ -716,7 +714,7 @@ export const Categories: React.FC = () => {
         <DialogContent>
           <Typography variant="body2" color="text.secondary">
             Are you sure you want to delete category <strong>{categoryToDelete?.name}</strong> (
-            <span style={{ fontFamily: 'monospace' }}>{categoryToDelete?.slug}</span>)?
+            <span>{categoryToDelete?.slug}</span>)?
             This action cannot be undone.
           </Typography>
         </DialogContent>

@@ -12,7 +12,7 @@ export const dataGridSx = (theme: Theme) => {
       display: 'flex',
       alignItems: 'center',
       borderBottom: `1px solid ${line}`,
-      fontSize: '0.875rem',
+      fontSize: '0.95rem',
       '&:focus, &:focus-within': { outline: 'none' },
     },
     '& .MuiDataGrid-columnHeaders': {
@@ -20,7 +20,7 @@ export const dataGridSx = (theme: Theme) => {
     },
     '& .MuiDataGrid-columnHeaderTitle': {
       fontWeight: 700,
-      fontSize: '0.75rem',
+      fontSize: '0.82rem',
       letterSpacing: '0.04em',
       textTransform: 'uppercase',
       color: 'text.secondary',

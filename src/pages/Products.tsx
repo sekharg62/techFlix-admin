@@ -471,8 +471,8 @@ export const Products: React.FC = () => {
                     label={categoryTitle}
                     size="small"
                     sx={{
-                      height: 18,
-                      fontSize: '0.68rem',
+                      height: 20,
+                      fontSize: '0.78rem',
                       fontWeight: 700,
                       backgroundColor: alpha(theme.palette.primary.main, 0.12),
                       color: theme.palette.primary.main,
@@ -508,14 +508,14 @@ export const Products: React.FC = () => {
           return (
             <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
               <Chip
-                icon={inStock ? <CheckCircleIcon sx={{ fontSize: '14px !important' }} /> : <CancelIcon sx={{ fontSize: '14px !important' }} />}
+                icon={inStock ? <CheckCircleIcon sx={{ fontSize: '15px !important' }} /> : <CancelIcon sx={{ fontSize: '15px !important' }} />}
                 label={inStock ? 'In Stock' : 'Out of Stock'}
                 size="small"
                 color={inStock ? 'success' : 'error'}
                 variant={isDarkMode ? 'filled' : 'outlined'}
                 sx={{
                   fontWeight: 700,
-                  fontSize: '0.75rem',
+                  fontSize: '0.82rem',
                   borderRadius: '8px',
                 }}
               />
@@ -549,9 +549,8 @@ export const Products: React.FC = () => {
                   size="small"
                   variant="outlined"
                   sx={{
-                    fontFamily: 'monospace',
                     fontWeight: 700,
-                    fontSize: '0.72rem',
+                    fontSize: '0.82rem',
                     borderRadius: '6px',
                     borderColor: isDarkMode ? alpha('#ffffff', 0.2) : alpha('#000000', 0.2),
                     backgroundColor: isDarkMode ? alpha('#ffffff', 0.04) : alpha('#000000', 0.03),
@@ -564,8 +563,8 @@ export const Products: React.FC = () => {
                     label={`+${planList.length - 2}`}
                     size="small"
                     sx={{
-                      height: 22,
-                      fontSize: '0.7rem',
+                      height: 24,
+                      fontSize: '0.8rem',
                       fontWeight: 800,
                       backgroundColor: alpha(theme.palette.primary.main, 0.15),
                       color: theme.palette.primary.main,
@@ -593,7 +592,7 @@ export const Products: React.FC = () => {
                   label={t}
                   size="small"
                   sx={{
-                    fontSize: '0.7rem',
+                    fontSize: '0.8rem',
                     fontWeight: 600,
                     borderRadius: '6px',
                     backgroundColor: isDarkMode ? alpha('#ffffff', 0.06) : alpha('#000000', 0.06),
@@ -617,7 +616,7 @@ export const Products: React.FC = () => {
           const dateStr = params.value ? dayjs(params.value).format('MMM D, YYYY') : '—';
           return (
             <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
-              <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
+              <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
                 {dateStr}
               </Typography>
             </Box>
@@ -641,7 +640,7 @@ export const Products: React.FC = () => {
                   onClick={() => handleOpenPreview(prod)}
                   sx={{
                     color: 'text.secondary',
-                    borderRadius: '8px',
+                    borderRadius: '4px',
                     p: 0.75,
                     '&:hover': {
                       color: 'primary.main',
@@ -658,7 +657,7 @@ export const Products: React.FC = () => {
                   onClick={() => handleOpenEdit(prod)}
                   sx={{
                     color: 'text.secondary',
-                    borderRadius: '8px',
+                    borderRadius: '4px',
                     p: 0.75,
                     '&:hover': {
                       color: 'primary.main',
@@ -675,7 +674,7 @@ export const Products: React.FC = () => {
                   onClick={() => handleOpenDelete(prod)}
                   sx={{
                     color: 'text.secondary',
-                    borderRadius: '8px',
+                    borderRadius: '4px',
                     p: 0.75,
                     '&:hover': {
                       color: 'error.main',
@@ -965,7 +964,7 @@ export const Products: React.FC = () => {
               variant="standard"
               fullWidth
               InputProps={{ disableUnderline: true }}
-              sx={{ input: { fontSize: '0.875rem', py: 0.75 } }}
+              sx={{ input: { fontSize: '0.95rem', py: 0.75 } }}
             />
             {searchTerm && (
               <IconButton size="small" onClick={() => setSearchTerm('')} sx={{ p: 0.5 }}>
@@ -1060,7 +1059,7 @@ export const Products: React.FC = () => {
               '& .MuiTab-root': {
                 textTransform: 'none',
                 fontWeight: 700,
-                fontSize: '0.875rem',
+                fontSize: '0.95rem',
                 minHeight: 48,
               },
             }}
@@ -1141,7 +1140,7 @@ export const Products: React.FC = () => {
                       />
                     }
                     label={stock ? 'In Stock' : 'Out of Stock'}
-                    sx={{ m: 0, '& .MuiFormControlLabel-label': { fontWeight: 700, fontSize: '0.85rem' } }}
+                    sx={{ m: 0, '& .MuiFormControlLabel-label': { fontWeight: 700, fontSize: '0.92rem' } }}
                   />
                 </Box>
 
@@ -1370,7 +1369,7 @@ export const Products: React.FC = () => {
                                 label={`₹${plan.price}`}
                                 size="small"
                                 color="primary"
-                                sx={{ fontWeight: 800, fontFamily: 'monospace', height: 22 }}
+                                sx={{ fontWeight: 800, height: 22 }}
                               />
                               {(plan.validity || plan.durationDays) && (
                                 <Typography variant="caption" color="text.secondary">
@@ -1661,7 +1660,7 @@ export const Products: React.FC = () => {
                       <Typography variant="body2" sx={{ fontWeight: 700 }}>
                         {plan.title || plan.name}
                       </Typography>
-                      <Typography variant="h6" color="primary.main" sx={{ fontWeight: 800, fontFamily: 'monospace' }}>
+                      <Typography variant="h6" color="primary.main" sx={{ fontWeight: 800 }}>
                         ₹{plan.price}
                       </Typography>
                       {(plan.validity || plan.durationDays) && (

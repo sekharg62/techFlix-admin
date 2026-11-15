@@ -8,7 +8,7 @@ import {
   PAYMENT_STATUS_META,
 } from '../../utils/orderFormat';
 
-const chipSx = { fontWeight: 700, borderRadius: '8px', fontSize: '0.72rem', letterSpacing: '0.02em' } as const;
+const chipSx = { fontWeight: 700, borderRadius: '8px', fontSize: '0.82rem', letterSpacing: '0.02em' } as const;
 
 export const OrderStatusChip: React.FC<{ status: OrderStatus; size?: 'small' | 'medium' }> = ({
   status,
@@ -47,7 +47,7 @@ export const PaymentMethodBadge: React.FC<{ method: PaymentMethodType }> = ({ me
         px: 1,
         py: 0.25,
         borderRadius: '6px',
-        fontSize: '0.75rem',
+        fontSize: '0.82rem',
         lineHeight: 1.6,
         fontWeight: 700,
         color: meta.color,

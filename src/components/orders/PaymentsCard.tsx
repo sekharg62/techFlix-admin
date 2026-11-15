@@ -57,7 +57,7 @@ export const PaymentsCard: React.FC<PaymentsCardProps> = ({ order, onVerify, onR
               >
                 <Field label="Transaction ID">
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    <Typography variant="body2" sx={{ fontFamily: 'monospace', fontWeight: 700 }}>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
                       {payment.trxId}
                     </Typography>
                     <CopyButton value={payment.trxId} label="Copy TrxID" />
@@ -65,7 +65,7 @@ export const PaymentsCard: React.FC<PaymentsCardProps> = ({ order, onVerify, onR
                 </Field>
                 <Field label="Sender number">
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    <Typography variant="body2" sx={{ fontFamily: 'monospace', fontWeight: 600 }}>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
                       {payment.senderNumber}
                     </Typography>
                     <CopyButton value={payment.senderNumber} label="Copy number" />
