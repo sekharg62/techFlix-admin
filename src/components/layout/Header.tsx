@@ -6,12 +6,10 @@ import {
   Typography,
   Box,
   Avatar,
-  Badge,
   useTheme as useMuiTheme
 } from '@mui/material';
 import {
   Menu as MenuIcon,
-  Notifications as NotificationsIcon,
   DarkMode as DarkModeIcon,
   LightMode as LightModeIcon
 } from '@mui/icons-material';
@@ -35,12 +33,6 @@ export const Header: React.FC<HeaderProps> = ({ open, toggleDrawer }) => {
     toggleTheme();
     toast.success(`Switched to ${mode === 'dark' ? 'Light' : 'Dark'} mode`, {
       icon: mode === 'dark' ? '☀️' : '🌙',
-    });
-  };
-
-  const handleNotificationsClick = () => {
-    toast('4 new notifications', {
-      icon: '🔔',
     });
   };
 
@@ -85,12 +77,6 @@ export const Header: React.FC<HeaderProps> = ({ open, toggleDrawer }) => {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <IconButton color="inherit" onClick={handleToggleTheme}>
             {mode === 'dark' ? <LightModeIcon /> : <DarkModeIcon />}
-          </IconButton>
-
-          <IconButton color="inherit" onClick={handleNotificationsClick}>
-            <Badge badgeContent={4} color="primary">
-              <NotificationsIcon />
-            </Badge>
           </IconButton>
 
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 1 }}>

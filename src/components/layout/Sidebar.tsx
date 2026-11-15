@@ -45,13 +45,16 @@ const menuItems = [
   { text: 'Reviews', icon: <RateReviewIcon />, path: '/dashboard/reviews' },
   { text: 'Hero Slides', icon: <ViewCarouselIcon />, path: '/dashboard/hero-slides' },
   { text: 'Home Sections', icon: <WebIcon />, path: '/dashboard/home-sections' },
-  { text: 'Settings', icon: <SettingsIcon />, path: '/dashboard/settings' },
+  { text: 'Payment Methods', icon: <SettingsIcon />, path: '/dashboard/settings' },
 ];
 
 export const Sidebar: React.FC<SidebarProps> = ({ open, toggleDrawer }) => {
   const theme = useTheme();
   const location = useLocation();
   const { logout } = useUser();
+  // Highlight parent items on nested routes (e.g. /dashboard/orders/TF-000001)
+  const isActive = (path: string) =>
+    path === '/dashboard' ? location.pathname === path : location.pathname.startsWith(path);
 
   return (
     <Drawer
@@ -94,12 +97,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, toggleDrawer }) => {
               <ListItemButton
                 component={Link}
                 to={item.path}
-                selected={location.pathname === item.path}
+                selected={isActive(item.path)}
                 sx={{
                   minHeight: 48,
                   justifyContent: open ? 'initial' : 'center',
                   px: 2.5,
-                  ...(location.pathname === item.path && {
+                  ...(isActive(item.path) && {
                     bgcolor: `${theme.palette.primary.main}1a`,
                     borderRight: `3px solid ${theme.palette.primary.main}`,
                   }),
@@ -110,7 +113,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, toggleDrawer }) => {
                     minWidth: 0,
                     mr: open ? 3 : 'auto',
                     justifyContent: 'center',
-                    color: location.pathname === item.path ? 'primary.main' : 'inherit',
+                    color: isActive(item.path) ? 'primary.main' : 'inherit',
                   }}
                 >
                   {item.icon}
@@ -119,9 +122,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, toggleDrawer }) => {
                   primary={item.text} 
                   sx={{ 
                     opacity: open ? 1 : 0,
-                    color: location.pathname === item.path ? 'primary.main' : 'inherit',
+                    color: isActive(item.path) ? 'primary.main' : 'inherit',
                     '& .MuiTypography-root': {
-                      fontWeight: location.pathname === item.path ? 600 : 400,
+                      fontWeight: isActive(item.path) ? 600 : 400,
                     }
                   }} 
                 />

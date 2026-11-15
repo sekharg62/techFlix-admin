@@ -13,6 +13,10 @@ import { Reviews } from './pages/Reviews';
 import { HeroSlides } from './pages/HeroSlides';
 import { HomeSection } from './pages/HomeSection';
 import { Login } from './pages/Login';
+import { Orders } from './pages/Orders';
+import { OrderDetails } from './pages/OrderDetails';
+import { Customers } from './pages/Customers';
+import { PaymentSettings } from './pages/PaymentSettings';
 
 // Protected route wrapper component: checks if user exists and has a valid token
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -35,11 +39,6 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   
   return <>{children}</>;
 };
-
-// Placeholder for other pages
-const PlaceholderPage = ({ title }: { title: string }) => (
-  <div><h2>{title}</h2><p>This page is under construction.</p></div>
-);
 
 function App() {
   return (
@@ -78,13 +77,14 @@ function App() {
               <Route index element={<DashboardHome />} />
               <Route path="products" element={<Products />} />
               <Route path="categories" element={<Categories />} />
-              <Route path="orders" element={<PlaceholderPage title="Orders" />} />
-              <Route path="customers" element={<PlaceholderPage title="Customers" />} />
+              <Route path="orders" element={<Orders />} />
+              <Route path="orders/:id" element={<OrderDetails />} />
+              <Route path="customers" element={<Customers />} />
               <Route path="reviews" element={<Reviews />} />
               <Route path="hero-slides" element={<HeroSlides />} />
               <Route path="home-sections" element={<HomeSection />} />
               <Route path="home-section" element={<HomeSection />} />
-              <Route path="settings" element={<PlaceholderPage title="Settings" />} />
+              <Route path="settings" element={<PaymentSettings />} />
             </Route>
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
