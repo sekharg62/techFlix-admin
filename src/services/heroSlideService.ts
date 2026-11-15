@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { API_URL } from './apiClient';
 import type {
   HeroSlide,
   CreateHeroSlidePayload,
@@ -8,7 +9,7 @@ import type {
   DeleteHeroSlideResponse,
 } from '../types/heroSlide';
 
-const API_BASE_URL = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/hero-slides`;
+const API_BASE_URL = `${API_URL}/hero-slides`;
 
 export const heroSlideService = {
   // Fetch all slides ordered by order asc

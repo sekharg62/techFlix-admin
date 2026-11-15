@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { API_URL } from './apiClient';
 import type {
   Review,
   CreateReviewPayload,
@@ -8,7 +9,7 @@ import type {
   DeleteReviewResponse,
 } from '../types/review';
 
-const API_BASE_URL = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/reviews`;
+const API_BASE_URL = `${API_URL}/reviews`;
 
 export const reviewService = {
   // Fetch all reviews

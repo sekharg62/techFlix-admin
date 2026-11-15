@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { API_URL } from './apiClient';
 import type {
   Category,
   CreateCategoryPayload,
@@ -8,7 +9,7 @@ import type {
   DeleteCategoryResponse,
 } from '../types/category';
 
-const API_BASE_URL = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/categories`;
+const API_BASE_URL = `${API_URL}/categories`;
 
 export const categoryService = {
   // Fetch all categories (GET /api/categories)

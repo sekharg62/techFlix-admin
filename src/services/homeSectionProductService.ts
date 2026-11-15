@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { API_URL } from './apiClient';
 import type {
   HomeSectionProduct,
   CreateHomeSectionProductPayload,
@@ -8,8 +9,8 @@ import type {
   DeleteHomeSectionProductResponse,
 } from '../types/homeSection';
 
-const API_BASE_URL = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/home-section-products`;
-const SECTIONS_API_URL = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/home-sections`;
+const API_BASE_URL = `${API_URL}/home-section-products`;
+const SECTIONS_API_URL = `${API_URL}/home-sections`;
 
 // Helper to retrieve auth token
 const getAuthHeaders = () => {
